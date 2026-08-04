@@ -283,6 +283,21 @@ body {
   box-sizing: border-box;
 }
 
+.chart-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+.chart-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+.chart-scroll-container::-webkit-scrollbar-thumb {
+  background: #e5e8eb;
+  border-radius: 3px;
+}
+
 .diff-list {
   display: flex;
   flex-direction: column;
