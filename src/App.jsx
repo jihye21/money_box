@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Award } from 'lucide-react';
+import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
   , ReferenceLine
  } from 'recharts';
@@ -65,18 +65,52 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [inputAmount, setInputAmount] = useState('');
 
+  // 기간 조회 변수 | 이전: -1, 다음: 1
+  const [dateOffset, setDateOffset] = useState(0);
+
+  //기간 조회 함수
   const getCurrentFilteredData = () => {
-    if (viewMode === 'daily') {
-      return data.daily.slice(-7);
-    } else if (viewMode === 'weekly') {
-      return data.weekly.slice(0, 5);
-    } else if (viewMode === 'monthly') {
-      return data.monthly.slice(0, 12);
-    }
-    return [];
-  };
-  
-  const currentData = viewMode !== 'goals' ? data[viewMode] : [];
+  if (viewMode === 'daily') {
+    const chunkSize = 7;
+    const totalLength = data.daily.length;
+    const endIndex = totalLength + (dateOffset * chunkSize);
+    const startIndex = Math.max(0, endIndex - chunkSize);
+    
+    if (endIndex <= 0) return [];
+    return data.daily.slice(startIndex, endIndex);
+
+  } else if (viewMode === 'weekly') {
+    const chunkSize = 4;
+    const totalLength = data.weekly.length;
+    const endIndex = totalLength + (dateOffset * chunkSize);
+    const startIndex = Math.max(0, endIndex - chunkSize);
+    
+    if (endIndex <= 0) return [];
+    return data.weekly.slice(startIndex, endIndex);
+
+  } else if (viewMode === 'monthly') {
+    const chunkSize = 12;
+    const totalLength = data.monthly.length;
+    const endIndex = totalLength + (dateOffset * chunkSize);
+    const startIndex = Math.max(0, endIndex - chunkSize);
+    
+    if (endIndex <= 0) return [];
+    return data.monthly.slice(startIndex, endIndex);
+  }
+
+  return [];
+};
+
+//이전 기간 데이터 확인
+const hasPreviousData = () => {
+  const nextOffset = dateOffset - 1;
+  const chunkSize = viewMode === 'daily' ? 7 : viewMode === 'weekly' ? 4 : 12;
+  const totalLength = data[viewMode].length;
+  const endIndex = totalLength + (nextOffset * chunkSize);
+  return endIndex > 0;
+};
+
+const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
 
   // 데이터 추가 핸들러
   const handleAddSavings = (e) => {
@@ -121,7 +155,14 @@ export default function App() {
   const monthsNeeded = goals.monthly > 0 ? Math.ceil(remainingAmount / goals.monthly) : 0;
   const yearsNeeded = (monthsNeeded / 12).toFixed(1);
 
+  // 좌우 너비 
   const chartWidth = Math.max(340, currentData.length * 42);
+
+  // viewMode 변경 시 0으로 초기화
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    setDateOffset(0);
+  };
 
   return (
     <div className="toss-container">
@@ -136,6 +177,30 @@ export default function App() {
           </button>
         )}
       </header>
+      
+      {viewMode === 'goals' ? null : (
+      <div className="period-nav-bar">
+        <button 
+          className="period-nav-btn" 
+          onClick={() => setDateOffset(prev => prev - 1)}
+          disabled={!hasPreviousData()}
+        >
+          <ChevronLeft size={16} /> 
+        </button>
+        
+        <span className="period-nav-title">
+          {dateOffset === 0 ? '' : `${Math.abs(dateOffset)}${viewMode === 'daily' ? '주' : viewMode === 'weekly' ? '달' : '년'} 전`}
+        </span>
+
+        <button 
+          className="period-nav-btn"
+          onClick={() => setDateOffset(prev => prev + 1)} 
+          disabled={dateOffset >= 0}
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+      )}
 
       {/* 뷰 전환 탭 */}
       <div className="tab-slider">

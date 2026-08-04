@@ -56,6 +56,44 @@ body {
   font-size: 14px;
 }
 
+/* 토스 스타일 기간 네비게이션 바 */
+.period-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.period-nav-btn {
+  background-color: #f2f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4e5968;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.period-nav-btn:hover:not(:disabled) {
+  background-color: #e5e8eb;
+  color: #191f28;
+}
+
+.period-nav-btn:disabled {
+  background-color: #f8f9fa;
+  color: #c2c8d0;
+  cursor: not-allowed;
+}
+
+.period-nav-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #191f28;
+  letter-spacing: -0.3px;
+}
+
+/* 기간 별 탭 */
 .tab-slider {
   display: flex;
   background-color: #e5e8eb;
