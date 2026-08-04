@@ -10,38 +10,38 @@ export default function App() {
   
   // 일간
   const dailyData = [
-    { date: '월', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
-    { date: '화', actual: 22000, target: 15000, diff: 7000, base: 15000, surplus: 7000 },
-    { date: '수', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0 },
-    { date: '목', actual: 18000, target: 15000, diff: 3000, base: 15000, surplus: 3000 },
-    { date: '금', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
-    { date: '토', actual: 12000, target: 15000, diff: -3000, base: 12000, surplus: 0 },
-    { date: '일', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000 },
+    { date: '월', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0, deficit: 10000 },
+    { date: '화', actual: 22000, target: 15000, diff: 7000, base: 15000, surplus: 7000, deficit: 0 },
+    { date: '수', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0, deficit: 0 },
+    { date: '목', actual: 18000, target: 15000, diff: 3000, base: 15000, surplus: 3000, deficit: 0 },
+    { date: '금', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0, deficit: 0 },
+    { date: '토', actual: 12000, target: 15000, diff: -3000, base: 12000, surplus: 0, deficit: 0 },
+    { date: '일', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000, deficit: 0 },
   ];
 
   // 주간
   const weeklyData = [
-    { period: '1주차', actual: 90000, target: 100000, diff: -10000, base: 90000, surplus: 0 },
-    { period: '2주차', actual: 110000, target: 100000, diff: 10000, base: 100000, surplus: 10000 },
-    { period: '3주차', actual: 70000, target: 100000, diff: -30000, base: 70000, surplus: 0 },
-    { period: '4주차', actual: 130000, target: 100000, diff: 30000, base: 100000, surplus: 30000 },
-    { period: '5주차', actual: 100000, target: 100000, diff: 0, base: 100000, surplus: 0 },
+    { period: '1주차', actual: 90000, target: 100000, diff: -10000, base: 90000, surplus: 0, deficit: 0 },
+    { period: '2주차', actual: 110000, target: 100000, diff: 10000, base: 100000, surplus: 10000, deficit: 0 },
+    { period: '3주차', actual: 70000, target: 100000, diff: -30000, base: 70000, surplus: 0, deficit: 0 },
+    { period: '4주차', actual: 130000, target: 100000, diff: 30000, base: 100000, surplus: 30000, deficit: 0 },
+    { period: '5주차', actual: 100000, target: 100000, diff: 0, base: 100000, surplus: 0, deficit: 0 },
   ];
 
   // 월간
   const monthlyData = [
-    { period: '1월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0 },
-    { period: '2월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000 },
-    { period: '3월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0 },
-    { period: '4월', actual: 1900000, target: 2000000, diff: -100000, base: 1900000, surplus: 0 },
-    { period: '5월', actual: 2300000, target: 2000000, diff: 300000, base: 2000000, surplus: 300000 },
-    { period: '6월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0 },
-    { period: '7월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000 },
-    { period: '8월', actual: 1900000, target: 2000000, diff: -100000, base: 1900000, surplus: 0 },
-    { period: '9월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0 },
-    { period: '10월', actual: 2100000, target: 2000000, diff: 100000, base: 2000000, surplus: 100000 },
-    { period: '11월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0 },
-    { period: '12월', actual: 2500000, target: 2000000, diff: 500000, base: 2000000, surplus: 500000 },
+    { period: '1월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
+    { period: '2월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000, deficit: 0 },
+    { period: '3월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
+    { period: '4월', actual: 1900000, target: 2000000, diff: -100000, base: 1900000, surplus: 0, deficit: 0 },
+    { period: '5월', actual: 2300000, target: 2000000, diff: 300000, base: 2000000, surplus: 300000, deficit: 0 },
+    { period: '6월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0, deficit: 0 },
+    { period: '7월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000, deficit: 0 },
+    { period: '8월', actual: 1900000, target: 2000000, diff: -100000, base: 1900000, surplus: 0, deficit: 0 },
+    { period: '9월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
+    { period: '10월', actual: 2100000, target: 2000000, diff: 100000, base: 2000000, surplus: 100000, deficit: 0 },
+    { period: '11월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0, deficit: 0 },
+    { period: '12월', actual: 2500000, target: 2000000, diff: 500000, base: 2000000, surplus: 500000, deficit: 0 },
   ];
 
   const [data, setData] = useState({
@@ -327,7 +327,14 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                         }}
                       />
                       <Tooltip 
-                        formatter={(value, name) => [`${value.toLocaleString()}원`, name === 'base' ? '목표 달성액' : '초과 저축액']}
+                        formatter={(value, name) => {
+                          let label = '';
+                          if (name === 'base') label = '목표 달성액';
+                          else if(name === 'surplus') label = '초과저축액';
+                          else if(name === 'deficit') label = '부족 저축액';
+
+                          return [`${value.toLocaleString()}원`, label];
+                        }}
                         contentStyle={{ background: '#191f28', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
                       />
                       {/* 목표선 표시 */}
@@ -343,6 +350,9 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                       
                       {/* 목표 초과분 막대 (민트색) */}
                       <Bar dataKey="surplus" stackId="stack" fill="#00c7be" radius={[6, 6, 0, 0]} name="surplus" />
+                      
+                      {/* 목표 미달설 막대 (연한 회색) */}
+                      <Bar dataKey="deficit" stackId="stack" fill="#e2e8f0" radius={[6, 6, 0, 0]} name="deficit" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
