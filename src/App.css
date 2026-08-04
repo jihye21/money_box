@@ -200,6 +200,11 @@ body {
   color: #3182ce;
 }
 
+.goal-tab {
+  color: #3182ce !important;
+  font-weight: 700 !important;
+}
+
 .progress-bar-bg {
   width: 100%;
   height: 12px;

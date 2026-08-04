@@ -1,23 +1,47 @@
 import React, { useState } from 'react';
 import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Award } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
-  , ReferenceLine, Cell
+  , ReferenceLine
  } from 'recharts';
 import './App.css';
 
 const initialData = {
   daily: [
-    { date: '8/1', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0 },
-    { date: '8/2', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000 }, // 5천원 초과
-    { date: '8/3', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
+    { date: '7/27', actual: 12000, target: 15000, diff: -3000, base: 12000, surplus: 0 },
+    { date: '7/28', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
+    { date: '7/29', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000 },
+    { date: '7/30', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0 },
+    { date: '7/31', actual: 18000, target: 15000, diff: 3000, base: 15000, surplus: 3000 },
+    { date: '8/1', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
+    { date: '8/2', actual: 22000, target: 15000, diff: 7000, base: 15000, surplus: 7000 },
+    { date: '8/3', actual: 12000, target: 15000, diff: -3000, base: 12000, surplus: 0 },
+    { date: '8/4', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
+    { date: '8/5', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000 },
+    { date: '8/6', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0 },
+    { date: '8/7', actual: 18000, target: 15000, diff: 3000, base: 15000, surplus: 3000 },
+    { date: '8/8', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0 },
+    { date: '8/9', actual: 22000, target: 15000, diff: 7000, base: 15000, surplus: 7000 },
+
   ],
   weekly: [
+    { period: '5주차', actual: 90000, target: 100000, diff: -10000, base: 90000, surplus: 0 },
+    { period: '6주차', actual: 110000, target: 100000, diff: 10000, base: 100000, surplus: 10000 },
     { period: '7주차', actual: 70000, target: 100000, diff: -30000, base: 70000, surplus: 0 },
-    { period: '8주차', actual: 120000, target: 100000, diff: 20000, base: 100000, surplus: 20000 }, // 2만원 초과
+    { period: '8주차', actual: 130000, target: 100000, diff: 30000, base: 100000, surplus: 30000 },
   ],
   monthly: [
+    { period: '8월', actual: 1900000, target: 2000000, diff: -100000, base: 1900000, surplus: 0 },
+    { period: '9월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0 },
+    { period: '10월', actual: 2100000, target: 2000000, diff: 100000, base: 2000000, surplus: 100000 },
+    { period: '11월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0 },
+    { period: '12월', actual: 2500000, target: 2000000, diff: 500000, base: 2000000, surplus: 500000 },
+    { period: '1월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0 },
+    { period: '2월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000 },
+    { period: '3월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0 },
+    { period: '4월', actual: 1900000, target: 2000000, diff: -100000, base: 1900000, surplus: 0 },
+    { period: '5월', actual: 2300000, target: 2000000, diff: 300000, base: 2000000, surplus: 300000 },
     { period: '6월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0 },
-    { period: '7월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000 }, // 20만원 초과
+    { period: '7월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000 },
   ]
 };
 
@@ -31,6 +55,7 @@ export default function App() {
     weekly: 15000,     // 주간 목표
     monthly: 2000000,   // 월간 목표 (200만원)
     yearly: 24000000,   // 연간 목표 (2400만원)
+    currentYearly: 8500000,  //올해 누적 금액
     finalGoal: 100000000, // 최종 목표 (1억원)
     currentTotal: 2950000, // 현재까지 모은 총액 예시
   });
@@ -64,7 +89,11 @@ export default function App() {
     });
 
     // 현재 총액에도 반영
-    setGoals(prev => ({ ...prev, currentTotal: prev.currentTotal + actual }));
+    setGoals(prev => ({ 
+      ...prev, 
+      currentTotal: prev.currentTotal + actual,
+      currentYearly: prev.currentYearly + (viewMode === 'monthly' ? actual: 0) 
+    }));
 
     setInputAmount('');
     setShowModal(false);
@@ -79,6 +108,8 @@ export default function App() {
   const remainingAmount = Math.max(0, goals.finalGoal - goals.currentTotal);
   const monthsNeeded = goals.monthly > 0 ? Math.ceil(remainingAmount / goals.monthly) : 0;
   const yearsNeeded = (monthsNeeded / 12).toFixed(1);
+
+  const chartWidth = Math.max(340, currentData.length * 45);
 
   return (
     <div className="toss-container">
@@ -99,12 +130,32 @@ export default function App() {
         <button className={viewMode === 'daily' ? 'active' : ''} onClick={() => setViewMode('daily')}>일간</button>
         <button className={viewMode === 'weekly' ? 'active' : ''} onClick={() => setViewMode('weekly')}>주간</button>
         <button className={viewMode === 'monthly' ? 'active' : ''} onClick={() => setViewMode('monthly')}>월간</button>
-        <button className={viewMode === 'goals' ? 'active' : ''} onClick={() => setViewMode('goals')}>종합목표</button>
+        <button className={viewMode === 'goals' ? 'active goal-tab' : 'goal-tab'} onClick={() => setViewMode('goals')}>종합목표</button>
       </div>
 
       {viewMode === 'goals' ? (
         /* 종합 목표 및 소요 기간 대시보드 */
         <div className="goals-dashboard">
+
+          <section className="card goal-hierarchy-card">
+            <div className="card-header">
+              <Target size={18} className="icon-toss" />
+              <span>연간</span>
+            </div>
+            <div className="goal-progress-box">
+              <div className="goal-row">
+                <span className="label">올해 모은 금액</span>
+                <span className="value">{goals.currentYearly.toLocaleString()}원</span>
+              </div>
+              <div className="progress-bar-bg secondary">
+                <div className="progress-bar-fill secondary" style={{ width: `${Math.min(100, (goals.currentYearly / goals.yearly) * 100)}%` }}></div>
+              </div>
+              <div className="goal-sub-info">
+                <span>달성률 {((goals.currentYearly / goals.yearly) * 100).toFixed(1)}%</span>
+              </div>
+            </div>
+          </section>
+
           <section className="card goal-summary-card">
             <div className="card-header">
               <Flag size={18} className="icon-toss" />
@@ -173,42 +224,44 @@ export default function App() {
               <TrendingUp size={18} className="icon-toss" />
               <span>{viewMode === 'daily' ? '일별' : viewMode === 'weekly' ? '주별' : '월별'} 저축 비교 그래프</span>
             </div>
-            <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={currentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey={viewMode === 'daily' ? 'date' : 'period'} stroke="#8b95a1" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis 
-                    stroke="#8b95a1" 
-                    fontSize={11} 
-                    tickLine={false} 
-                    axisLine={false}
-                    tickFormatter={(value) => {
-                      if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
-                      if (value >= 10000) return `${(value / 10000).toLocaleString()}만`;
-                      if (value >= 1000) return `${(value / 1000).toLocaleString()}천`;
-                      if (value >= 100) return `${(value / 100).toLocaleString()}백`;
-                      return value.toLocaleString();
-                    }}
-                  />
-                  <Tooltip 
-                    formatter={(value, name) => [`${value.toLocaleString()}원`, name === 'base' ? '목표 달성액' : '초과 저축액']}
-                    contentStyle={{ background: '#191f28', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
-                  />
-                  {/* 목표선 표시 */}
-                  <ReferenceLine 
-                    y={viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly}
-                    stroke="#3182ce" 
-                    strokeDasharray="3 3" 
-                    label={{ position: 'top', value: ``, fill: '#3182ce', fontSize: 11 }} 
-                  />
-                  
-                  {/* 기본 목표 달성 막대 (파란색) */}
-                  <Bar dataKey="base" stackId="stack" fill="#3182ce" radius={[0, 0, 0, 0]} name="base" />
-                  
-                  {/* 목표 초과분 막대 (민트색) */}
-                  <Bar dataKey="surplus" stackId="stack" fill="#00c7be" radius={[6, 6, 0, 0]} name="surplus" />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="chart-scroll-container">
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={currentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey={viewMode === 'daily' ? 'date' : 'period'} stroke="#8b95a1" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis 
+                      stroke="#8b95a1" 
+                      fontSize={11} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tickFormatter={(value) => {
+                        if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
+                        if (value >= 10000) return `${(value / 10000).toLocaleString()}만`;
+                        if (value >= 1000) return `${(value / 1000).toLocaleString()}천`;
+                        if (value >= 100) return `${(value / 100).toLocaleString()}백`;
+                        return value.toLocaleString();
+                      }}
+                    />
+                    <Tooltip 
+                      formatter={(value, name) => [`${value.toLocaleString()}원`, name === 'base' ? '목표 달성액' : '초과 저축액']}
+                      contentStyle={{ background: '#191f28', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
+                    />
+                    {/* 목표선 표시 */}
+                    <ReferenceLine 
+                      y={viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly}
+                      stroke="#3182ce" 
+                      strokeDasharray="3 3" 
+                      label={{ position: 'top', value: ``, fill: '#3182ce', fontSize: 11 }} 
+                    />
+                    
+                    {/* 기본 목표 달성 막대 (파란색) */}
+                    <Bar dataKey="base" stackId="stack" fill="#3182ce" radius={[0, 0, 0, 0]} name="base" />
+                    
+                    {/* 목표 초과분 막대 (민트색) */}
+                    <Bar dataKey="surplus" stackId="stack" fill="#00c7be" radius={[6, 6, 0, 0]} name="surplus" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </section>
 
