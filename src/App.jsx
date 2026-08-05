@@ -9,7 +9,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState('daily'); // 'daily' | 'weekly' | 'monthly' | 'goals'
   
   // 일간
-  const dailyData = [
+  const dailyData = [/*
     { date: '월', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0, deficit: 10000 },
     { date: '화', actual: 22000, target: 15000, diff: 7000, base: 15000, surplus: 7000, deficit: 0 },
     { date: '수', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0, deficit: 0 },
@@ -17,19 +17,23 @@ export default function App() {
     { date: '금', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0, deficit: 0 },
     { date: '토', actual: 12000, target: 15000, diff: -3000, base: 12000, surplus: 0, deficit: 0 },
     { date: '일', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000, deficit: 0 },
-  ];
+  */
+    ];
 
   // 주간
   const weeklyData = [
+    /*
     { period: '1주차', actual: 90000, target: 100000, diff: -10000, base: 90000, surplus: 0, deficit: 0 },
     { period: '2주차', actual: 110000, target: 100000, diff: 10000, base: 100000, surplus: 10000, deficit: 0 },
     { period: '3주차', actual: 70000, target: 100000, diff: -30000, base: 70000, surplus: 0, deficit: 0 },
     { period: '4주차', actual: 130000, target: 100000, diff: 30000, base: 100000, surplus: 30000, deficit: 0 },
     { period: '5주차', actual: 100000, target: 100000, diff: 0, base: 100000, surplus: 0, deficit: 0 },
-  ];
+  */
+    ];
 
   // 월간
   const monthlyData = [
+    /*
     { period: '1월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
     { period: '2월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000, deficit: 0 },
     { period: '3월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
@@ -42,7 +46,8 @@ export default function App() {
     { period: '10월', actual: 2100000, target: 2000000, diff: 100000, base: 2000000, surplus: 100000, deficit: 0 },
     { period: '11월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0, deficit: 0 },
     { period: '12월', actual: 2500000, target: 2000000, diff: 500000, base: 2000000, surplus: 500000, deficit: 0 },
-  ];
+  */
+    ];
 
   const [data, setData] = useState({
     daily: dailyData,
@@ -63,6 +68,10 @@ export default function App() {
 
   // 모달 상태
   const [showModal, setShowModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(()=>{
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [inputAmount, setInputAmount] = useState('');
 
   // 기간 조회 변수 | 이전: -1, 다음: 1
@@ -289,7 +298,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                 <Award size={24} className="icon-star" />
                 <div>
                   <h3>목표 초과 달성!</h3>
-                  <p>이번 {viewMode === 'daily' ? '' : viewMode === 'weekly' ? '주' : '달'}엔 목표보다 <span className="highlight">{latestItem.surplus.toLocaleString()}원</span> 더 모았어요!</p>
+                  <p>{viewMode === 'daily' ? '이번' : viewMode === 'weekly' ? '이번 주' : '이번 달'}엔 목표보다 <span className="highlight">{latestItem.surplus.toLocaleString()}원</span> 더 모았어요!</p>
                 </div>
               </div>
             </div>
@@ -393,13 +402,26 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
           <div className="modal-content">
             <h3>저축액 기록하기 ({viewMode})</h3>
             <form onSubmit={handleAddSavings}>
+
+              <div className="input-group">
+                <label>
+                  {viewMode === 'daily' && '기록할 날짜 선택'}
+                  {viewMode === 'weekly' && '기록할 주 선택'}
+                  {viewMode === 'monthly' && '기록할 월 선택'}
+                </label>
+                <input
+                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : 'month'}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  required
+                />
+              </div>
               <div className="input-group">
                 <label>실제 저축액 (원)</label>
                 <input 
                   type="number" 
                   value={inputAmount} 
                   onChange={(e) => setInputAmount(e.target.value)} 
-                  placeholder="예: 2000000"
                   required
                 />
               </div>
