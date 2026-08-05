@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Zap, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
   , ReferenceLine
  } from 'recharts';
@@ -222,39 +222,58 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
       {viewMode === 'goals' ? (
         /* 종합 목표 및 소요 기간 대시보드 */
         <div className="goals-dashboard">
-
+          {/* 연간 목표 */}
           <section className="card goal-hierarchy-card">
             <div className="card-header">
               <Target size={18} className="icon-toss" />
-              <span>연간</span>
+              <span>연간 목표</span>
             </div>
             <div className="goal-progress-box">
               <div className="goal-row">
-                <span className="label">올해 모은 금액</span>
-                <span className="value">{goals.currentYearly.toLocaleString()}원</span>
+                <span className="label">연간 목표액</span>
+                <input 
+                  type="number" 
+                  value={goals.yearly} 
+                  onChange={(e) => setGoals(prev => ({ ...prev, yearly: Number(e.target.value) }))}
+                  className="goal-input-field"
+                />
               </div>
-              <div className="progress-bar-bg secondary">
+              <div className="goal-row" style={{ marginTop: '8px' }}>
+                <span className="label">올해 모은 금액</span>
+                <span className="value">{goals.currentYearly.toLocaleString()}</span>
+              </div>
+              <div className="progress-bar-bg secondary" style={{ marginTop: '8px' }}>
                 <div className="progress-bar-fill secondary" style={{ width: `${Math.min(100, (goals.currentYearly / goals.yearly) * 100)}%` }}></div>
               </div>
               <div className="goal-sub-info">
-                <span>달성률 {((goals.currentYearly / goals.yearly) * 100).toFixed(1)}%</span>
+                <span>달성률 {goals.yearly > 0 ? ((goals.currentYearly / goals.yearly) * 100).toFixed(1) : 0}%</span>
               </div>
             </div>
           </section>
 
+          {/* 최종 목표 달성 현황 */}
           <section className="card goal-summary-card">
             <div className="card-header">
               <Flag size={18} className="icon-toss" />
-              <span>최종 목표 달성 현황</span>
+              <span>최종 목표 현황</span>
             </div>
             <div className="goal-progress-box">
               <div className="goal-row">
                 <span className="label">최종 목표액</span>
-                <span className="value bold">{goals.finalGoal.toLocaleString()}원</span>
+                <input 
+                  type="number" 
+                  value={goals.finalGoal} 
+                  onChange={(e) => setGoals(prev => ({ ...prev, finalGoal: Number(e.target.value) }))}
+                  className="goal-input-field"
+                />
               </div>
               <div className="goal-row">
-                <span className="label">현재 모은 금액</span>
-                <span className="value highlight">{goals.currentTotal.toLocaleString()}원</span>
+                <span className="label">현재 모은 총액</span>
+                <input 
+                  type="number" 
+                  value={goals.currentTotal} 
+                  onChange={(e) => setGloals(prev => ({ ...prev, currentTotal: Number(e.target.value)}))}
+                  className="goal-input-field value highlight"/>
               </div>
               <div className="progress-bar-bg">
                 <div 
@@ -263,31 +282,52 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                 ></div>
               </div>
               <p className="progress-pct">
-                달성률: {((goals.currentTotal / goals.finalGoal) * 100).toFixed(1)}%
+                달성률: {goals.finalGoal > 0 ? ((goals.currentTotal / goals.finalGoal) * 100).toFixed(1) : 0}%
               </p>
             </div>
           </section>
 
+          {/* (일간/주간/월간 목표) 설정 및 소요 기간 */}
           <section className="card duration-card">
             <div className="card-header">
-              <Target size={18} className="icon-toss" />
-              <span>소요 기간 예측</span>
+              <Zap size={18} className="icon-toss" />
+              <span>주기별 저축 페이스</span>
             </div>
             <div className="duration-content">
-              <div className="duration-item">
-                <span className="d-title">월간 저축 페이스</span>
-                <span className="d-val">{goals.monthly.toLocaleString()}원 / 월</span>
+              <div className="duration-item input-row">
+                <span className="d-title">월간 목표 페이스</span>
+                <input 
+                  type="number" 
+                  value={goals.monthly} 
+                  onChange={(e) => setGoals(prev => ({ ...prev, monthly: Number(e.target.value) }))}
+                  className="goal-input-field"
+                />
               </div>
-              <div className="duration-item">
-                <span className="d-title">연간 환산 목표</span>
-                <span className="d-val">{goals.yearly.toLocaleString()}원 / 년</span>
+              <div className="duration-item input-row">
+                <span className="d-title">주간 목표</span>
+                <input 
+                  type="number" 
+                  value={goals.weekly} 
+                  onChange={(e) => setGoals(prev => ({ ...prev, weekly: Number(e.target.value) }))}
+                  className="goal-input-field"
+                />
               </div>
-              <div className="duration-highlight-box">
-                <span className="highlight-title">최종 1억원까지 남은 기간</span>
+              <div className="duration-item input-row">
+                <span className="d-title">일간 목표</span>
+                <input 
+                  type="number" 
+                  value={goals.daily} 
+                  onChange={(e) => setGoals(prev => ({ ...prev, daily: Number(e.target.value) }))}
+                  className="goal-input-field"
+                />
+              </div>
+              <div className="duration-highlight-box" style={{ marginTop: '16px' }}>
+                <span className="highlight-title">최종 목표까지</span>
                 <span className="highlight-val">약 {monthsNeeded}개월 ({yearsNeeded}년)</span>
               </div>
             </div>
           </section>
+
         </div>
       ) : (
         <>
@@ -372,7 +412,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
           <section className="card calendar-card">
             <div className="card-header">
               <CalendarIcon size={18} className="icon-toss" />
-              <span>목표 대비 달성 현황 (차이)</span>
+              <span>목표 대비 달성 현황</span>
             </div>
             <div className="diff-list">
               {currentData.map((item, idx) => {
@@ -417,7 +457,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                 />
               </div>
               <div className="input-group">
-                <label>실제 저축액 (원)</label>
+                <label>실제 저축액</label>
                 <input 
                   type="number" 
                   value={inputAmount} 
