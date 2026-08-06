@@ -238,9 +238,9 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
     // 현재 뷰에 맞는 목표액 가져오기
     const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
     
-    const diff = actual - target;
+    const diff = actual < target ? target - actual : 0;
     const base = Math.min(actual, target);       // 목표까지만 채워지는 기본 금액
-    const surplus = Math.max(0, diff);           // 목표를 넘긴 초과 금액
+    const surplus = Math.max(0, actual - target);           // 목표를 넘긴 초과 금액
 
     const newItem = viewMode === 'daily' 
       ? { date: `8/${currentData.length + 1}`, actual, target, diff, base, surplus }
@@ -494,7 +494,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                           let label = '';
                           if (name === 'base') label = '목표 달성액';
                           else if(name === 'surplus') label = '초과저축액';
-                          else if(name === 'deficit') label = '부족 저축액';
+                          else if(name === 'diff') label = '부족 저축액';
 
                           return [`${value.toLocaleString()}원`, label];
                         }}
@@ -515,7 +515,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                       <Bar dataKey="surplus" stackId="stack" fill="#00c7be" radius={[6, 6, 0, 0]} name="surplus" />
                       
                       {/* 목표 미달설 막대 (연한 회색) */}
-                      <Bar dataKey="deficit" stackId="stack" fill="#e2e8f0" radius={[6, 6, 0, 0]} name="deficit" />
+                      <Bar dataKey="diff" stackId="stack" fill="#e2e8f0" radius={[6, 6, 0, 0]} name="diff" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -545,8 +545,10 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                       />원</span>
                       {isSurplus ? (
                         <span className="diff-badge surplus">+{item.surplus.toLocaleString()}원 초과!</span>
+                      ) : item.diff > 0 ? (
+                        <span className={`diff-badge minus`}>-{item.diff.toLocaleString()}원</span>
                       ) : (
-                        <span className={`diff-badge ${item.diff >= 0 ? 'plus' : 'minus'}`}>{item.diff.toLocaleString()}원</span>
+                        <span></span>
                       )}
                     </div>
                   </div>
