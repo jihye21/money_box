@@ -105,6 +105,54 @@ export default function App() {
   return [];
 };
 
+  //일,주,월간 저축액 데이터 수정 함수
+  const handleDataChange = (idx, value) => {
+    //콤마 제거하고 숫자로 변환
+    const cleanValue = value.replace(/,/g, '');
+
+    const actual = Number(cleanValue) || 0;
+
+    if(actual === 0) {
+      setData(prevData => ({
+        ...prevData,
+        [viewMode]: prevData[viewMode].filter((_, i) => i !== idx)
+      }));
+      return;
+    }
+    const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
+    
+    const diff = actual - target;
+    const base = Math.min(actual, target);
+    const surplus = Math.max(0, diff);
+    const deficit = Math.max(0, target - actual);
+
+    const updatedList = [...data[viewMode]];
+
+    updatedList[idx] = {
+      ...updatedList[idx],
+      actual,
+      diff,
+      base,
+      surplus,
+      deficit,
+    };
+
+    setData(prevData => ({
+      ...prevData,
+      [viewMode]: updatedList
+    }));
+  };
+
+  //종합 목표 데이터 수정 함수
+  const handleGoalChange = (field, value) => {
+    const rawValue = value.replace(/,/g, '');
+
+    setGoals(prev => ({
+      ...prev, 
+      [field]: rawValue === '' ? 0 : Number(rawValue)
+    }));
+  };
+
 //이전 기간 데이터 확인
 const hasPreviousData = () => {
   const nextOffset = dateOffset - 1;
@@ -227,9 +275,10 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
               <div className="goal-row">
                 <span className="label">연간 목표액</span>
                 <input 
-                  type="number" 
-                  value={goals.yearly} 
-                  onChange={(e) => setGoals(prev => ({ ...prev, yearly: Number(e.target.value) }))}
+                  type="text"
+                  inputMode='numeric'
+                  value={goals.yearly ? goals.yearly.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('yearly', e.target.value)}
                   className="goal-input-field"
                 />
               </div>
@@ -256,18 +305,20 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
               <div className="goal-row">
                 <span className="label">최종 목표액</span>
                 <input 
-                  type="number" 
-                  value={goals.finalGoal} 
-                  onChange={(e) => setGoals(prev => ({ ...prev, finalGoal: Number(e.target.value) }))}
+                  type="text"
+                  inputMode='numeric'
+                  value={goals.finalGoal ? goals.finalGoal.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('finalGoal', e.target.value)}
                   className="goal-input-field"
                 />
               </div>
               <div className="goal-row">
                 <span className="label">현재 모은 총액</span>
                 <input 
-                  type="number" 
-                  value={goals.currentTotal} 
-                  onChange={(e) => setGloals(prev => ({ ...prev, currentTotal: Number(e.target.value)}))}
+                  type="text" 
+                  inputMode='numeric'
+                  value={goals.currentTotal ? goals.currentTotal.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('currentTotal', e.target.value)}
                   className="goal-input-field value highlight"/>
               </div>
               <div className="progress-bar-bg">
@@ -292,27 +343,30 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
               <div className="duration-item input-row">
                 <span className="d-title">월간 목표 페이스</span>
                 <input 
-                  type="number" 
-                  value={goals.monthly} 
-                  onChange={(e) => setGoals(prev => ({ ...prev, monthly: Number(e.target.value) }))}
+                  type="text"
+                  inputMode='numeric'
+                  value={goals.monthly ? goals.monthly.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('monthly', e.target.value)}
                   className="goal-input-field"
                 />
               </div>
               <div className="duration-item input-row">
                 <span className="d-title">주간 목표</span>
                 <input 
-                  type="number" 
-                  value={goals.weekly} 
-                  onChange={(e) => setGoals(prev => ({ ...prev, weekly: Number(e.target.value) }))}
+                  type="text" 
+                  inputMode='numeric'
+                  value={goals.weekly ? goals.weekly.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('weekly', e.target.value)}
                   className="goal-input-field"
                 />
               </div>
               <div className="duration-item input-row">
                 <span className="d-title">일간 목표</span>
                 <input 
-                  type="number" 
-                  value={goals.daily} 
-                  onChange={(e) => setGoals(prev => ({ ...prev, daily: Number(e.target.value) }))}
+                  type="text" 
+                  inputMode='numeric'
+                  value={goals.daily ? goals.daily.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('daily', e.target.value)}
                   className="goal-input-field"
                 />
               </div>
@@ -416,7 +470,14 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                   <div key={idx} className="diff-item">
                     <span className="item-label">{item.date || item.period}</span>
                     <div className="item-values">
-                      <span className="actual-val">{item.actual.toLocaleString()}원</span>
+                      <span className='actual-val'>
+                      <input 
+                        type="text"
+                        inputMode="numeric"
+                        className="goal-input-field"
+                        value={item.actual ? item.actual.toLocaleString() : ''}
+                        onChange={(e)=>handleDataChange(idx, e.target.value)}
+                      />원</span>
                       {isSurplus ? (
                         <span className="diff-badge surplus">+{item.surplus.toLocaleString()}원 초과!</span>
                       ) : (
@@ -454,9 +515,16 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
               <div className="input-group">
                 <label>실제 저축액</label>
                 <input 
-                  type="number" 
-                  value={inputAmount} 
-                  onChange={(e) => setInputAmount(e.target.value)} 
+                  type="text" 
+                  inputMode='numeric'
+                  value={inputAmount ? Number(inputAmount).toLocaleString() : ''} 
+                  onChange={(e) =>{
+                    const rawValue = e.target.value.replace(/,/g, '');
+
+                    if(rawValue === '' || !isNaN(Number(rawValue))){
+                      setInputAmount(rawValue);
+                    }
+                  }}
                   required
                 />
               </div>
