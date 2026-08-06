@@ -252,12 +252,23 @@ body {
   text-align: right;
   width: 140px;
   outline: none;
-  -webkit-appearance: none;
 }
 
 .goal-input-field:focus {
   border-color: #3182f6;
   background-color: #ffffff;
+}
+
+/* 크롬, 사파리, 엣지, 오페라 */
+.goal-input-field::-webkit-outer-spin-button,
+.goal-input-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 파이어폭스 */
+.goal-input-field {
+  -moz-appearance: textfield;
 }
 
 .duration-item.input-row {
@@ -341,6 +352,7 @@ body {
 
 .chart-wrapper {
   width: 100%;
+  min-width: 100%;
   height: 220px;
   box-sizing: border-box;
 }

@@ -9,7 +9,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState('daily'); // 'daily' | 'weekly' | 'monthly' | 'goals'
   
   // 일간
-  const dailyData = [/*
+  const dailyData = [
     { date: '월', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0, deficit: 10000 },
     { date: '화', actual: 22000, target: 15000, diff: 7000, base: 15000, surplus: 7000, deficit: 0 },
     { date: '수', actual: 10000, target: 15000, diff: -5000, base: 10000, surplus: 0, deficit: 0 },
@@ -17,23 +17,19 @@ export default function App() {
     { date: '금', actual: 15000, target: 15000, diff: 0, base: 15000, surplus: 0, deficit: 0 },
     { date: '토', actual: 12000, target: 15000, diff: -3000, base: 12000, surplus: 0, deficit: 0 },
     { date: '일', actual: 20000, target: 15000, diff: 5000, base: 15000, surplus: 5000, deficit: 0 },
-  */
     ];
 
   // 주간
   const weeklyData = [
-    /*
     { period: '1주차', actual: 90000, target: 100000, diff: -10000, base: 90000, surplus: 0, deficit: 0 },
     { period: '2주차', actual: 110000, target: 100000, diff: 10000, base: 100000, surplus: 10000, deficit: 0 },
     { period: '3주차', actual: 70000, target: 100000, diff: -30000, base: 70000, surplus: 0, deficit: 0 },
     { period: '4주차', actual: 130000, target: 100000, diff: 30000, base: 100000, surplus: 30000, deficit: 0 },
     { period: '5주차', actual: 100000, target: 100000, diff: 0, base: 100000, surplus: 0, deficit: 0 },
-  */
     ];
 
   // 월간
   const monthlyData = [
-    /*
     { period: '1월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
     { period: '2월', actual: 2200000, target: 2000000, diff: 200000, base: 2000000, surplus: 200000, deficit: 0 },
     { period: '3월', actual: 2000000, target: 2000000, diff: 0, base: 2000000, surplus: 0, deficit: 0 },
@@ -46,7 +42,6 @@ export default function App() {
     { period: '10월', actual: 2100000, target: 2000000, diff: 100000, base: 2000000, surplus: 100000, deficit: 0 },
     { period: '11월', actual: 1800000, target: 2000000, diff: -200000, base: 1800000, surplus: 0, deficit: 0 },
     { period: '12월', actual: 2500000, target: 2000000, diff: 500000, base: 2000000, surplus: 500000, deficit: 0 },
-  */
     ];
 
   const [data, setData] = useState({
@@ -352,11 +347,11 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
             </div>
               <div className="chart-scroll-container">
                 <div className="chart-wrapper" style={{ width: `${chartWidth}px` }}>
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer>
                     <BarChart data={currentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <XAxis 
                         dataKey={viewMode === 'daily' ? 'date' : 'period'} 
-                        troke="#8b95a1" 
+                        stroke="#8b95a1" 
                         fontSize={12} 
                         tickLine={false} 
                         axisLine={false} 
