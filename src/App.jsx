@@ -52,13 +52,13 @@ export default function App() {
 
   // 종합 목표 설정 상태
   const [goals, setGoals] = useState({
-    daily: 15000,  //일간 목표
-    weekly: 15000,     // 주간 목표
-    monthly: 2000000,   // 월간 목표
-    yearly: 24000000,   // 연간 목표
-    currentYearly: 8500000,  //올해 누적 금액
-    finalGoal: 100000000, // 최종 목표
-    currentTotal: 2950000, // 현재까지 모은 총액 예시
+    daily: 0,  //일간 목표
+    weekly: 0,     // 주간 목표
+    monthly: 0,   // 월간 목표
+    yearly: 0,   // 연간 목표
+    currentYearly: 0,  //올해 누적 금액
+    finalGoal: 0, // 최종 목표
+    currentTotal: 0, // 현재까지 모은 총액 예시
   });
 
   // 모달 상태
@@ -146,11 +146,61 @@ export default function App() {
   //종합 목표 데이터 수정 함수
   const handleGoalChange = (field, value) => {
     const rawValue = value.replace(/,/g, '');
+    const numericValue = rawValue === '' ? 0 : Number(rawValue);
 
-    setGoals(prev => ({
-      ...prev, 
-      [field]: rawValue === '' ? 0 : Number(rawValue)
-    }));
+    if(field === 'daily' || field === 'weekly' || field === 'monthly' || field === 'yearly'){
+      let daily = 0;
+      let weekly = 0;
+      let monthly = 0;
+      let yearly = 0;
+
+      switch (field) {
+        case 'daily':
+          daily = numericValue;
+          weekly = daily * 7;
+          monthly = daily * 30;
+          yearly = daily * 365;
+          break;
+        
+        case 'weekly':
+          weekly = numericValue;
+          daily = Math.round(weekly / 7);
+          monthly = Math.round(weekly * 4.33);
+          yearly = weekly * 52;
+          break;
+
+        case 'monthly':
+          monthly = numericValue;
+          daily = Math.round(monthly / 30);
+          weekly = Math.round(monthly / 4.33);
+          yearly = monthly * 12;
+          break;
+
+        case 'yearly':
+          yearly = numericValue;
+          daily = Math.round(yearly / 365);
+          weekly = Math.round(yearly / 52);
+          monthly = Math.round(yearly / 12);
+          break;
+
+        default:
+          break;
+      }
+
+      setGoals(prev => ({
+        ...prev, 
+        daily,
+        weekly,
+        monthly,
+        yearly,
+      }));
+    } else {
+      setGoals(prev => ({
+        ...prev, 
+        [field]: numericValue
+      }));
+    }
+    
   };
 
 //이전 기간 데이터 확인
