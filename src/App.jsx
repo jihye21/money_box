@@ -55,6 +55,7 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('my_data', JSON.stringify(data));
+    console.log("저장됨: ", JSON.stringify(data));
   }, [data]);
 
   // 종합 목표 설정 상태
@@ -89,35 +90,42 @@ export default function App() {
 
   //기간 조회 함수
   const getCurrentFilteredData = () => {
-  if (viewMode === 'daily') {
-    const chunkSize = 7;
-    const totalLength = data.daily.length;
-    const endIndex = totalLength + (dateOffset * chunkSize);
-    const startIndex = Math.max(0, endIndex - chunkSize);
-    
-    if (endIndex <= 0) return [];
-    return data.daily.slice(startIndex, endIndex);
+    const rawList = data[viewMode] || [];
 
-  } else if (viewMode === 'weekly') {
-    const chunkSize = 4;
-    const totalLength = data.weekly.length;
-    const endIndex = totalLength + (dateOffset * chunkSize);
-    const startIndex = Math.max(0, endIndex - chunkSize);
-    
-    if (endIndex <= 0) return [];
-    return data.weekly.slice(startIndex, endIndex);
+    const sortedList = [...rawList].sort((a, b) => {
+      if(!a.rawDate || !b.rawDate) return 0;
+      return new Date(a.rawDate) - new Date(b.rawDate);
+    });
 
-  } else if (viewMode === 'monthly') {
-    const chunkSize = 12;
-    const totalLength = data.monthly.length;
-    const endIndex = totalLength + (dateOffset * chunkSize);
-    const startIndex = Math.max(0, endIndex - chunkSize);
-    
-    if (endIndex <= 0) return [];
-    return data.monthly.slice(startIndex, endIndex);
-  }
+    if (viewMode === 'daily') {
+      const chunkSize = 7;
+      const totalLength = data.daily.length;
+      const endIndex = totalLength + (dateOffset * chunkSize);
+      const startIndex = Math.max(0, endIndex - chunkSize);
+      
+      if (endIndex <= 0) return [];
+      return data.daily.slice(startIndex, endIndex);
 
-  return [];
+    } else if (viewMode === 'weekly') {
+      const chunkSize = 4;
+      const totalLength = data.weekly.length;
+      const endIndex = totalLength + (dateOffset * chunkSize);
+      const startIndex = Math.max(0, endIndex - chunkSize);
+      
+      if (endIndex <= 0) return [];
+      return data.weekly.slice(startIndex, endIndex);
+
+    } else if (viewMode === 'monthly') {
+      const chunkSize = 12;
+      const totalLength = data.monthly.length;
+      const endIndex = totalLength + (dateOffset * chunkSize);
+      const startIndex = Math.max(0, endIndex - chunkSize);
+      
+      if (endIndex <= 0) return [];
+      return data.monthly.slice(startIndex, endIndex);
+    }
+
+    return [];
 };
 
   //일,주,월간 저축액 데이터 수정 함수
@@ -242,9 +250,36 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
     const base = Math.min(actual, target);       // 목표까지만 채워지는 기본 금액
     const surplus = Math.max(0, actual - target);           // 목표를 넘긴 초과 금액
 
-    const newItem = viewMode === 'daily' 
-      ? { date: `8/${currentData.length + 1}`, actual, target, diff, base, surplus }
-      : { period: `${currentData.length + 1}번째`, actual, target, diff, base, surplus };
+    //날짜 생성 로직
+    let dateLabel = '';
+    if(viewMode === 'daily' && selectedDate) {
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      const dayName = days[dateObj.getDay()];
+
+      dateLabel = `${month}/${day} (${dayName})`;
+    } else if(viewMode === 'weekly' && selectedDate) {
+      const [year, weekStr] = selectedDate.split('-W');
+      const weekNum = Number(weekStr);
+
+      const month = new Date(year, 0, (weekNum - 1) * 7 + 1).getMonth() + 1;
+      const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
+      const calculatedWeek = Math.ceil((new Date(year, month -1, day).getDate() + firstDayOfMonth)/7);
+
+      dateLabel = `${month}월 ${calculatedWeek || 1}주차`;
+    }
+
+    const newItem = {
+      rawDate: selectedDate, 
+      date: viewMode === 'daily' ? dateLabel : undefined,
+      period: viewMode !== 'daily' ? dateLabel : undefined,
+      actual,
+      target,
+      diff,
+      base,
+      surplus
+    };
 
     setData({
       ...data,
@@ -259,6 +294,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
     }));
 
     setInputAmount('');
+    setSelectedDate('');
     setShowModal(false);
   };
 
