@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Zap, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
   , ReferenceLine
@@ -44,22 +44,37 @@ export default function App() {
     { period: '12월', actual: 2500000, target: 2000000, diff: 500000, base: 2000000, surplus: 500000, deficit: 0 },
     ];
 
-  const [data, setData] = useState({
-    daily: dailyData,
-    weekly: weeklyData,
-    monthly: monthlyData,
+  const [data, setData] = useState(() =>{
+    const savedData = localStorage.getItem('my_data');
+    return savedData ? JSON.parse(savedData) : {
+      daily: dailyData,
+      weekly: weeklyData,
+      monthly: monthlyData,
+    };
   });
 
+  useEffect(() => {
+    localStorage.setItem('my_data', JSON.stringify(data));
+  }, [data]);
+
   // 종합 목표 설정 상태
-  const [goals, setGoals] = useState({
-    daily: 0,  //일간 목표
-    weekly: 0,     // 주간 목표
-    monthly: 0,   // 월간 목표
-    yearly: 0,   // 연간 목표
-    currentYearly: 0,  //올해 누적 금액
-    finalGoal: 0, // 최종 목표
-    currentTotal: 0, // 현재까지 모은 총액 예시
+  const [goals, setGoals] = useState(() =>{
+    const savedGoals = localStorage.getItem('my_goals');
+    
+    return savedGoals ? JSON.parse(savedGoals) : {
+      daily: 0,  //일간 목표
+      weekly: 0,     // 주간 목표
+      monthly: 0,   // 월간 목표
+      yearly: 0,   // 연간 목표
+      currentYearly: 0,  //올해 누적 금액
+      finalGoal: 0, // 최종 목표
+      currentTotal: 0, // 현재까지 모은 총액 예시
+    };
   });
+
+  useEffect(() =>{
+    localStorage.setItem('my_goals', JSON.stringify(goals));
+  }, [goals]);
 
   // 모달 상태
   const [showModal, setShowModal] = useState(false);
