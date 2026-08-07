@@ -32,7 +32,7 @@ export default function App() {
 
   useEffect(() => {
       localStorage.setItem('my_data', JSON.stringify(data));
-      console.log("업데이트됨: ", JSON.stringify(data));
+      console.log("로그 수정 업데이트됨: ", JSON.stringify(data));
   }, [data]);
 
   // 종합 목표 설정 상태
