@@ -19,14 +19,20 @@ export default function App() {
 
   const [data, setData] = useState(() =>{
     const savedData = localStorage.getItem('my_data');
-    return savedData ? JSON.parse(savedData) : null;
+    return savedData ? JSON.parse(savedData) : {
+
+      daily: dailyData,
+
+      weekly: weeklyData,
+
+      monthly: monthlyData,
+
+    };
   });
 
   useEffect(() => {
-    if(data !== null) {
       localStorage.setItem('my_data', JSON.stringify(data));
       console.log("저장됨: ", JSON.stringify(data));
-    }
   }, [data]);
 
   // 종합 목표 설정 상태
