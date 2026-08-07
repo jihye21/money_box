@@ -6,7 +6,6 @@ export default defineConfig({
   base: '/money_box/',
   plugins: [
     react(),
-    tailwindcss(),
   ],
 })
 
