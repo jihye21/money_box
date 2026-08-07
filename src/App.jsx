@@ -19,7 +19,7 @@ export default function App() {
 
   const [data, setData] = useState(() =>{
     const savedData = localStorage.getItem('my_data');
-    return savedData ? JSON.parse(savedData) : null;
+    return savedData ? JSON.parse(savedData) : daily: [], weekly: [], monthly: [];
   });
 
   useEffect(() => {
