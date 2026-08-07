@@ -23,7 +23,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    if(data !== null} {
+    if(data !== null) {
       localStorage.setItem('my_data', JSON.stringify(data));
       console.log("저장됨: ", JSON.stringify(data));
     }
