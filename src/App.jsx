@@ -31,7 +31,7 @@ export default function App() {
   });
 //로그
   useEffect(() => {
-      localStorage.setItem('my_data', JSON.stringify(data));
+      //localStorage.setItem('my_data', JSON.stringify(data));
       console.log("로그 수정 업데이트됨: ", JSON.stringify(data));
   }, [data]);
 
