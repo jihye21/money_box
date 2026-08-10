@@ -474,7 +474,8 @@ body {
   border: 1px solid #e5e8eb;
   font-size: 15px;
   outline: none;
-  background-color: #f2f4f6;
+  background-color: white;
+  color: #191f28;
 }
 
 .input-group input:focus {
