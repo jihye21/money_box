@@ -67,76 +67,104 @@ export default function App() {
 
   //기간 조회 함수
   const getCurrentFilteredData = () => {
-    const rawList = data[viewMode] || [];
+  const rawList = data[viewMode] || [];
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
-    const sortedList = [...rawList].sort((a, b) => {
-      if(!a.rawDate || !b.rawDate) return 0;
-      return new Date(a.rawDate) - new Date(b.rawDate);
-    });
+  if (viewMode === 'daily') {
+    // 1. 기준이 될 날짜를 새로 생성 (now 기준 offset 적용)
+    const baseDate = new Date(now);
+    baseDate.setDate(now.getDate() + (dateOffset * 7));
+    
+    const day = baseDate.getDay();
+    const diffToMonday = baseDate.getDate() - day + (day === 0 ? -6 : 1);
+    
+    // 2. 월요일 시작일 계산 (새 객체로 생성)
+    const weekStart = new Date(baseDate.setDate(diffToMonday));
+    weekStart.setHours(0, 0, 0, 0);
 
-    if (viewMode === 'daily') {
-      const chunkSize = 7;
-      const totalLength = data.daily.length;
-      const endIndex = totalLength + (dateOffset * chunkSize);
-      const startIndex = Math.max(0, endIndex - chunkSize);
-      
-      if (endIndex <= 0) return [];
-      return data.daily.slice(startIndex, endIndex);
+    // 3. 일요일 종료일 계산
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
 
-    } else if (viewMode === 'weekly') {
-      const chunkSize = 4;
-      const totalLength = data.weekly.length;
-      const endIndex = totalLength + (dateOffset * chunkSize);
-      const startIndex = Math.max(0, endIndex - chunkSize);
-      
-      if (endIndex <= 0) return [];
-      return data.weekly.slice(startIndex, endIndex);
+    return rawList
+      .filter(item => {
+        if (!item.rawDate) return false;
+        const itemDate = new Date(item.rawDate);
+        itemDate.setHours(0, 0, 0, 0);
+        return itemDate >= weekStart && itemDate <= weekEnd;
+      })
+      .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
 
-    } else if (viewMode === 'monthly') {
-      const chunkSize = 12;
-      const totalLength = data.monthly.length;
-      const endIndex = totalLength + (dateOffset * chunkSize);
-      const startIndex = Math.max(0, endIndex - chunkSize);
-      
-      if (endIndex <= 0) return [];
-      return data.monthly.slice(startIndex, endIndex);
-    }
+  } else if (viewMode === 'weekly') {
+    // 주간: offset에 따라 월(Month) 이동
+    const targetDate = new Date(now.getFullYear(), now.getMonth() + dateOffset, 1);
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
 
-    return [];
+    return rawList
+      .filter(item => {
+        if (!item.rawDate) return false;
+        const itemDate = new Date(item.rawDate);
+        return itemDate.getFullYear() === targetYear && itemDate.getMonth() === targetMonth;
+      })
+      .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
+
+  } else if (viewMode === 'monthly') {
+    // 월간: offset에 따라 연(Year) 이동
+    const targetYear = now.getFullYear() + dateOffset;
+
+    return rawList
+      .filter(item => {
+        if (!item.rawDate) return false;
+        const itemDate = new Date(item.rawDate);
+        return itemDate.getFullYear() === targetYear;
+      })
+      .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
+  }
+
+  return [];
 };
 
   //일,주,월간 저축액 데이터 수정 함수
-  const handleDataChange = (idx, value) => {
+  const handleDataChange = (targetItem, value) => {
     //콤마 제거하고 숫자로 변환
     const cleanValue = value.replace(/,/g, '');
 
     const actual = Number(cleanValue) || 0;
 
+    const currentList = data[viewMode] || [];
+
     if(actual === 0) {
       setData(prevData => ({
         ...prevData,
-        [viewMode]: prevData[viewMode].filter((_, i) => i !== idx)
+        [viewMode]: prevData[viewMode].filter(item => item.rawDate !== targetItem.rawDate)
       }));
       return;
     }
-    const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
-    
-    const diff = actual - target;
+    const target = targetItem.target ?? (viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly);
+  
+    const diff = actual < target ? target - actual : 0;
     const base = Math.min(actual, target);
-    const surplus = Math.max(0, diff);
-    const deficit = Math.max(0, target - actual);
+    const surplus = Math.max(0, actual - target);
+    const deficit = actual < target ? target - actual : 0;
 
-    const updatedList = [...data[viewMode]];
-
-    updatedList[idx] = {
-      ...updatedList[idx],
-      actual,
-      diff,
-      base,
-      surplus,
-      deficit,
-    };
-
+    const updatedList = currentList.map(item => {
+      if (item.rawDate === targetItem.rawDate) {
+        return {
+          ...item, 
+          actual,
+          target,
+          diff, 
+          base,
+          surplus,
+          deficit,
+        };
+      }
+      return item;
+    });
+    
     setData(prevData => ({
       ...prevData,
       [viewMode]: updatedList
@@ -203,77 +231,152 @@ export default function App() {
     
   };
 
-//이전 기간 데이터 확인
+//이전 기간 데이터 확인 함수
 const hasPreviousData = () => {
+  const rawList = data[viewMode] || [];
+  if (rawList.length === 0) return false;
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const nextOffset = dateOffset - 1;
-  const chunkSize = viewMode === 'daily' ? 7 : viewMode === 'weekly' ? 4 : 12;
-  const totalLength = data[viewMode].length;
-  const endIndex = totalLength + (nextOffset * chunkSize);
-  return endIndex > 0;
+
+  if (viewMode === 'daily') {
+    const baseDate = new Date(now);
+    baseDate.setDate(now.getDate() + (nextOffset * 7));
+    const day = baseDate.getDay();
+    const diffToMonday = baseDate.getDate() - day + (day === 0 ? -6 : 1);
+    
+    const weekStart = new Date(baseDate.setDate(diffToMonday));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    return rawList.some(item => {
+      if (!item.rawDate) return false;
+      const itemDate = new Date(item.rawDate);
+      itemDate.setHours(0, 0, 0, 0);
+      return itemDate >= weekStart && itemDate <= weekEnd;
+    });
+
+  } else if (viewMode === 'weekly') {
+    const targetDate = new Date(now.getFullYear(), now.getMonth() + nextOffset, 1);
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
+
+    return rawList.some(item => {
+      if (!item.rawDate) return false;
+      const itemDate = new Date(item.rawDate);
+      return itemDate.getFullYear() === targetYear && itemDate.getMonth() === targetMonth;
+    });
+
+  } else if (viewMode === 'monthly') {
+    const targetYear = now.getFullYear() + nextOffset;
+
+    return rawList.some(item => {
+      if (!item.rawDate) return false;
+      const itemDate = new Date(item.rawDate);
+      return itemDate.getFullYear() === targetYear;
+    });
+  }
+
+  return false;
 };
 
 const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
 
   // 데이터 추가 핸들러
   const handleAddSavings = (e) => {
-    e.preventDefault();
-    if (!inputAmount) return;
+  e.preventDefault();
+  if (!inputAmount || !selectedDate) return;
 
-    const actual = Number(inputAmount);
-    // 현재 뷰에 맞는 목표액 가져오기
-    const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
+  const actualToAdd = Number(inputAmount);
+  // 현재 뷰에 맞는 목표액 가져오기
+  const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
+
+  // 날짜 생성 로직
+  let dateLabel = '';
+  if (viewMode === 'daily' && selectedDate) {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const dayName = days[dateObj.getDay()];
+
+    dateLabel = `${month}/${day} (${dayName})`;
+  } else if (viewMode === 'weekly' && selectedDate) {
+    const [year, weekStr] = selectedDate.split('-W');
+    const weekNum = Number(weekStr);
+
+    const month = new Date(year, 0, (weekNum - 1) * 7 + 1).getMonth() + 1;
+    const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
+    const calculatedWeek = Math.ceil((new Date(year, month - 1, 1).getDate() + firstDayOfMonth) / 7);
+
+    dateLabel = `${month}월 ${calculatedWeek || 1}주차`;
+  } else if (viewMode === 'monthly' && selectedDate) {
+    const [year, month] = selectedDate.split('-');
+    dateLabel = `${Number(month)}월`;
+  }
+
+  const currentList = data[viewMode] || [];
+  const existingIndex = currentList.findIndex(item => item.rawDate === selectedDate);
+
+  let updatedList;
+
+  if (existingIndex !== -1) {
+    const existingItem = currentList[existingIndex];
+    const newActual = existingItem.actual + actualToAdd;
     
-    const diff = actual < target ? target - actual : 0;
-    const base = Math.min(actual, target);       // 목표까지만 채워지는 기본 금액
-    const surplus = Math.max(0, actual - target);           // 목표를 넘긴 초과 금액
+    const diff = newActual < target ? target - newActual : 0;
+    const base = Math.min(newActual, target);
+    const surplus = Math.max(0, newActual - target);
+    const deficit = newActual < target ? target - newActual : 0;
 
-    //날짜 생성 로직
-    let dateLabel = '';
-    if(viewMode === 'daily' && selectedDate) {
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      const [year, month, day] = selectedDate.split('-').map(Number);
-      const dateObj = new Date(year, month - 1, day);
-      const dayName = days[dateObj.getDay()];
-
-      dateLabel = `${month}/${day} (${dayName})`;
-    } else if(viewMode === 'weekly' && selectedDate) {
-      const [year, weekStr] = selectedDate.split('-W');
-      const weekNum = Number(weekStr);
-
-      const month = new Date(year, 0, (weekNum - 1) * 7 + 1).getMonth() + 1;
-      const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
-      const calculatedWeek = Math.ceil((new Date(year, month -1, day).getDate() + firstDayOfMonth)/7);
-
-      dateLabel = `${month}월 ${calculatedWeek || 1}주차`;
-    }
+    updatedList = [...currentList];
+    updatedList[existingIndex] = {
+      ...existingItem,
+      actual: newActual,
+      diff,
+      base,
+      surplus,
+      deficit
+    };
+  } else {
+    const diff = actualToAdd < target ? target - actualToAdd : 0;
+    const base = Math.min(actualToAdd, target);
+    const surplus = Math.max(0, actualToAdd - target);
+    const deficit = actualToAdd < target ? target - actualToAdd : 0;
 
     const newItem = {
       rawDate: selectedDate, 
       date: viewMode === 'daily' ? dateLabel : undefined,
       period: viewMode !== 'daily' ? dateLabel : undefined,
-      actual,
+      actual: actualToAdd,
       target,
       diff,
       base,
-      surplus
+      surplus,
+      deficit
     };
 
-    setData({
-      ...data,
-      [viewMode]: [...data[viewMode], newItem]
-    });
+    updatedList = [...currentList, newItem];
+  }
 
-    // 현재 총액에도 반영
-    setGoals(prev => ({ 
-      ...prev, 
-      currentTotal: prev.currentTotal + actual,
-      currentYearly: prev.currentYearly + (viewMode === 'monthly' ? actual: 0) 
-    }));
+  // 데이터 상태 업데이트
+  setData({
+    ...data,
+    [viewMode]: updatedList
+  });
 
-    setInputAmount('');
-    setSelectedDate('');
-    setShowModal(false);
-  };
+  setGoals(prev => ({ 
+    ...prev, 
+    currentTotal: prev.currentTotal + actualToAdd,
+    currentYearly: prev.currentYearly + (viewMode === 'monthly' ? actualToAdd : 0) 
+  }));
+
+  setInputAmount('');
+  setSelectedDate('');
+  setShowModal(false);
+};
 
   // 가장 최근 데이터 기준 초과 여부 확인 (축하 카드용)
   const latestItem = currentData.length > 0 ? currentData[currentData.length - 1] : null;
@@ -542,10 +645,10 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
               <span>목표 대비 달성 현황</span>
             </div>
             <div className="diff-list">
-              {currentData.map((item, idx) => {
+              {currentData.map((item) => {
                 const isSurplus = item.actual > item.target;
                 return (
-                  <div key={idx} className="diff-item">
+                  <div key={item.rawDate} className="diff-item">
                     <span className="item-label">{item.date || item.period}</span>
                     <div className="item-values">
                       <span className='actual-val'>
@@ -554,7 +657,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                         inputMode="numeric"
                         className="goal-input-field"
                         value={item.actual ? item.actual.toLocaleString() : ''}
-                        onChange={(e)=>handleDataChange(idx, e.target.value)}
+                        onChange={(e)=>handleDataChange(item, e.target.value)}
                       />원</span>
                       {isSurplus ? (
                         <span className="diff-badge surplus">+{item.surplus.toLocaleString()}원 초과!</span>
