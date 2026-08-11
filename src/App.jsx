@@ -125,12 +125,28 @@ export default function App() {
         return itemDate.getFullYear() === targetYear;
       })
       .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
+  } else if (viewMode === 'yearly') {
+    const baseYear = now.getFullYear() + (dateOffset * 10);
+    const startYear = baseYear - 5;
+    const endYear = baseYear + 4;
+
+    return rawList 
+      .filter(item => {
+        if(!item.rawDate) return false;
+        const itemYear = Number(String(item.rawDate).split('-')[0]);
+        return itemYear >= startYear && itemYear <= endYear;
+      })
+      .sort((a, b) => {
+        const yearA = Number(String(a.rawDate).split('-')[0]);
+        const yearB = Number(String(b.rawDate).split('-')[0]);
+        return yearA - yearB;
+      });
   }
 
   return [];
 };
 
-  //일,주,월간 저축액 데이터 수정 함수
+  //일,주,월,연간 저축액 데이터 수정 함수
   const handleDataChange = (targetItem, value) => {
     //콤마 제거하고 숫자로 변환
     const cleanValue = value.replace(/,/g, '');
@@ -146,7 +162,11 @@ export default function App() {
       }));
       return;
     }
-    const target = targetItem.target ?? (viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly);
+    const target = targetItem.target ?? (
+        viewMode === 'daily' ? goals.daily 
+      : viewMode === 'weekly' ? goals.weekly 
+      : viewMode === 'monthly' ? goals.monthly : goals.yearly
+    );
   
     const diff = actual < target ? target - actual : 0;
     const base = Math.min(actual, target);
@@ -281,6 +301,16 @@ const hasPreviousData = () => {
       const itemDate = new Date(item.rawDate);
       return itemDate.getFullYear() === targetYear;
     });
+  } else if(viewMode === 'yearly') {
+    const baseYear = now.getFullYear() + (nextOffset * 10);
+    const startYear = baseYear - 5;
+    const endYear = baseYear + 4;
+
+    return rawList.some(item => {
+      if(!item.rawDate) return false;
+      const itemYear = Number(String(item.rawDate).split('-')[0]);
+      return itemYear >= startYear && itemYear <= endYear;
+    });
   }
 
   return false;
@@ -295,7 +325,8 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
 
   const actualToAdd = Number(inputAmount);
   // 현재 뷰에 맞는 목표액 가져오기
-  const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
+  const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' 
+    ? goals.weekly : viewMode === 'monthly' ? goals.monthly : goals.yearly;
 
   // 날짜 생성 로직
   let dateLabel = '';
@@ -318,6 +349,9 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
   } else if (viewMode === 'monthly' && selectedDate) {
     const [year, month] = selectedDate.split('-');
     dateLabel = `${Number(month)}월`;
+  } else if (viewMode === 'yearly' && selectedDate) {
+    const year = selectedDate.split('-')[0];
+    dateLabel = `${year}년`;
   }
 
   const currentList = data[viewMode] || [];
@@ -713,7 +747,10 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                   {viewMode === 'yearly' && '기록할 해 선택'}
                 </label>
                 <input
-                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : viewMode === 'monthly' ? 'monthly':'yearly'}
+                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : viewMode === 'monthly' ? 'monthly': 'number'}
+                  placeholder={viewMode === 'yearly' ? '연도 입력': undefined}
+                  min={viewMode === 'yearly' ? '1900' : undefined}
+                  max={viewMode === 'yearly' ? new Date().getFullYear() : undefined}
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   required
