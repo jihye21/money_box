@@ -6,7 +6,15 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
 import './App.css';
 
 export default function App() {
-  const [viewMode, setViewMode] = useState('daily'); // 'daily' | 'weekly' | 'monthly' | 'goals'
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('viewMode') || 'daily';
+  }); // 'daily' | 'weekly' | 'monthly' | 'goals'
+
+  useEffect(()=>{
+    if(viewMode !== 'goals'){
+      localStorage.setItem('viewMode', viewMode);
+    }
+  }, [viewMode]);
   
   // 일간
   const dailyData = [];
@@ -72,18 +80,15 @@ export default function App() {
   now.setHours(0, 0, 0, 0);
 
   if (viewMode === 'daily') {
-    // 1. 기준이 될 날짜를 새로 생성 (now 기준 offset 적용)
     const baseDate = new Date(now);
     baseDate.setDate(now.getDate() + (dateOffset * 7));
     
     const day = baseDate.getDay();
     const diffToMonday = baseDate.getDate() - day + (day === 0 ? -6 : 1);
     
-    // 2. 월요일 시작일 계산 (새 객체로 생성)
     const weekStart = new Date(baseDate.setDate(diffToMonday));
     weekStart.setHours(0, 0, 0, 0);
 
-    // 3. 일요일 종료일 계산
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
     weekEnd.setHours(23, 59, 59, 999);
@@ -98,7 +103,6 @@ export default function App() {
       .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
 
   } else if (viewMode === 'weekly') {
-    // 주간: offset에 따라 월(Month) 이동
     const targetDate = new Date(now.getFullYear(), now.getMonth() + dateOffset, 1);
     const targetYear = targetDate.getFullYear();
     const targetMonth = targetDate.getMonth();
@@ -112,7 +116,6 @@ export default function App() {
       .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
 
   } else if (viewMode === 'monthly') {
-    // 월간: offset에 따라 연(Year) 이동
     const targetYear = now.getFullYear() + dateOffset;
 
     return rawList
@@ -437,10 +440,30 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
 
       {/* 뷰 전환 탭 */}
       <div className="tab-slider">
-        <button className={viewMode === 'daily' ? 'active' : ''} onClick={() => setViewMode('daily')}>일간</button>
-        <button className={viewMode === 'weekly' ? 'active' : ''} onClick={() => setViewMode('weekly')}>주간</button>
-        <button className={viewMode === 'monthly' ? 'active' : ''} onClick={() => setViewMode('monthly')}>월간</button>
-        <button className={viewMode === 'goals' ? 'active goal-tab' : 'goal-tab'} onClick={() => setViewMode('goals')}>종합목표</button>
+        <select 
+          className={`toss-dropdown ${viewMode !== 'goals' ? 'active' : ''}`}
+          value={viewMode === 'goals' ? (localStorage.getItem('viewMode') || 'daily') : viewMode}
+          onChange={(e) => {
+            setViewMode(e.target.value);
+          }}
+          onMouseDown={(e) => {
+            if(viewMode === 'goals'){
+              e.preventDefault();
+              const savedMode = localStorage.getItem('viewMode') || 'daily';
+              
+              setViewMode(savedMode);
+            }
+          }}
+        >
+          <option value='daily'>일간</option>
+          <option value='weekly'>주간</option>
+          <option value='monthly'>월간</option>
+          <option value='yearly'>연간</option>
+        </select>
+        
+        <button className={viewMode === 'goals' ? 'active goal-tab' : 'goal-tab'} 
+          onClick={() => 
+          setViewMode('goals')}>종합목표</button>
       </div>
 
       {viewMode === 'goals' ? (
@@ -568,7 +591,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                 <Award size={24} className="icon-star" />
                 <div>
                   <h3>목표 초과 달성!</h3>
-                  <p>{viewMode === 'daily' ? '이번' : viewMode === 'weekly' ? '이번 주' : '이번 달'}엔 목표보다 <span className="highlight">{latestItem.surplus.toLocaleString()}원</span> 더 모았어요!</p>
+                  <p>{viewMode === 'daily' ? '이번' : viewMode === 'weekly' ? '이번 주' : viewMode === 'monthly' ? '이번 달' : '올해'}엔 목표보다 <span className="highlight">{latestItem.surplus.toLocaleString()}원</span> 더 모았어요!</p>
                 </div>
               </div>
             </div>
@@ -578,7 +601,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
           <section className="card graph-card">
             <div className="card-header">
               <TrendingUp size={18} className="icon-toss" />
-              <span>{viewMode === 'daily' ? '일별' : viewMode === 'weekly' ? '주별' : '월별'} 저축 비교 그래프</span>
+              <span>{viewMode === 'daily' ? '일별' : viewMode === 'weekly' ? '주별' : viewMode === 'monthly' ? '월별' : '연별'} 저축 비교 그래프</span>
             </div>
               <div className="chart-scroll-container">
                 <div className="chart-wrapper" style={{ width: `${chartWidth}px` }}>
@@ -687,9 +710,10 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                   {viewMode === 'daily' && '기록할 날짜 선택'}
                   {viewMode === 'weekly' && '기록할 주 선택'}
                   {viewMode === 'monthly' && '기록할 월 선택'}
+                  {viewMode === 'yearly' && '기록할 해 선택'}
                 </label>
                 <input
-                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : 'month'}
+                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : viewMode === 'monthly' ? 'monthly':'yearly'}
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   required
