@@ -616,6 +616,16 @@ const currentData = viewMode !== 'goals'
             </div>
             <div className="duration-content">
               <div className="duration-item input-row">
+                <span className="d-title">연간 목표</span>
+                <input 
+                  type="text"
+                  inputMode='numeric'
+                  value={goals.yearly ? goals.yearly.toLocaleString() : ''} 
+                  onChange={(e) => handleGoalChange('yearly', e.target.value)}
+                  className="goal-input-field"
+                />
+              </div>
+              <div className="duration-item input-row">
                 <span className="d-title">월간 목표</span>
                 <input 
                   type="text"
