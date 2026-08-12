@@ -126,9 +126,10 @@ export default function App() {
       })
       .sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
   } else if (viewMode === 'yearly') {
-    const baseYear = now.getFullYear() + (dateOffset * 10);
-    const startYear = baseYear - 5;
-    const endYear = baseYear + 4;
+    const currentYear = new Date().getFullYear();
+    const baseYear = currentYear + (dateOffset * 10);
+    const startYear = Math.floor(baseYear/10) * 10;
+    const endYear = startYear + 9;
 
     return rawList 
       .filter(item => {
@@ -301,14 +302,14 @@ const hasPreviousData = () => {
       return itemDate.getFullYear() === targetYear;
     });
   } else if(viewMode === 'yearly') {
-    const baseYear = now.getFullYear() + (nextOffset * 10);
-    const startYear = baseYear - 5;
-    const endYear = baseYear + 4;
+    const currentYear = new Date().getFullYear();
+    const baseYear = currentYear + (dateOffset * 10);
+    const currentStartYear = Math.floor(baseYear / 10) * 10;
 
     return rawList.some(item => {
       if(!item.rawDate) return false;
       const itemYear = Number(String(item.rawDate).split('-')[0]);
-      return itemYear >= startYear && itemYear <= endYear;
+      return itemYear < currentStartYear;
     });
   }
 
@@ -320,6 +321,7 @@ const hasPreviousData = () => {
   : viewMode === 'weekly' ? goals.weekly
   : viewMode === 'monthly' ? goals.monthly 
   : goals.yearly;
+
 const currentData = viewMode !== 'goals' 
   ? getCurrentFilteredData().map(item => ({
     ...item,
@@ -471,7 +473,9 @@ const currentData = viewMode !== 'goals'
         </button>
         
         <span className="period-nav-title">
-          {dateOffset === 0 ? '' : `${Math.abs(dateOffset)}${viewMode === 'daily' ? '주' : viewMode === 'weekly' ? '달' : '년'} 전`}
+          {dateOffset === 0 ? '' 
+            : `${Math.abs(dateOffset) * (viewMode === 'yearly' ? 10 : 1)}
+            ${viewMode === 'daily' ? '주' : viewMode === 'weekly' ? '달' : '년'} 전`}
         </span>
 
         <button 
