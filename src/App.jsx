@@ -156,11 +156,24 @@ export default function App() {
 
     const currentList = data[viewMode] || [];
 
+    //현재 리스트에서 수정/삭제하려는 actual 값 가져오기
+    const existingItem = currentList.find(item => item.rawDate === targetItem.rawDate);
+    const oldActual = existingItem ? existingItem.actual : 0;
+
+    //diff 계산
+    const diffAmount = actual - oldActual;
+
     //0이면 데이터 삭제
     if(actual === 0) {
       setData(prevData => ({
         ...prevData,
         [viewMode]: prevData[viewMode].filter(item => item.rawDate !== targetItem.rawDate)
+      }));
+
+      //"현재 모음 총액" - 삭제된 금액
+      setGoals(prev => ({
+        ...prev, 
+        currentTotal: Math.max(0, prev.currentTotal - oldActual)
       }));
       return;
     }
@@ -193,6 +206,11 @@ export default function App() {
     setData(prevData => ({
       ...prevData,
       [viewMode]: updatedList
+    }));
+
+    setGoals(prev => ({
+      ...prev,
+      currentTotal: Math.max(0, prev.currentTotal + diffAmount)
     }));
   };
 
