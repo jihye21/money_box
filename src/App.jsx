@@ -162,7 +162,7 @@ export default function App() {
       }));
       return;
     }
-    const target = targetItem.target ?? (
+    const target = (
         viewMode === 'daily' ? goals.daily 
       : viewMode === 'weekly' ? goals.weekly 
       : viewMode === 'monthly' ? goals.monthly : goals.yearly
@@ -251,7 +251,6 @@ export default function App() {
         [field]: numericValue
       }));
     }
-    
   };
 
 //이전 기간 데이터 확인 함수
