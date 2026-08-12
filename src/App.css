@@ -173,6 +173,12 @@ body {
   color: #333;
 }
 
+.header-total-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3182f6;
+}
+
 /* 초과 달성 카드 스타일 */
 .surplus-comp-container {
   display: flex;

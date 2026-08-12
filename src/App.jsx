@@ -737,6 +737,10 @@ const currentData = viewMode !== 'goals'
             <div className="card-header">
               <CalendarIcon size={18} className="icon-toss" />
               <span>달성 현황</span>
+
+              <span className='header-total-amount'>
+                {currentData.reduce((sum, item) => sum + (item.actual || 0), 0).toLocaleString()}원
+              </span>
             </div>
             <div className="diff-list">
               {currentData.map((item) => {
