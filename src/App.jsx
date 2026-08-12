@@ -747,7 +747,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
                   {viewMode === 'yearly' && '기록할 해 선택'}
                 </label>
                 <input
-                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : viewMode === 'monthly' ? 'monthly': 'number'}
+                  type={viewMode === 'daily' ? 'date' : viewMode === 'weekly' ? 'week' : viewMode === 'monthly' ? 'month': 'number'}
                   placeholder={viewMode === 'yearly' ? '연도 입력': undefined}
                   min={viewMode === 'yearly' ? '1900' : undefined}
                   max={viewMode === 'yearly' ? new Date().getFullYear() : undefined}
