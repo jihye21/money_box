@@ -156,6 +156,7 @@ export default function App() {
 
     const currentList = data[viewMode] || [];
 
+    //0이면 데이터 삭제
     if(actual === 0) {
       setData(prevData => ({
         ...prevData,
@@ -519,7 +520,9 @@ const currentData = viewMode !== 'goals'
       {viewMode === 'goals' ? (
         /* 종합 목표 및 소요 기간 대시보드 */
         <div className="goals-dashboard">
-          {/* 연간 목표 */}
+
+          {/* 연간 목표 
+          
           <section className="card goal-hierarchy-card">
             <div className="card-header">
               <Target size={18} className="icon-toss" />
@@ -548,7 +551,7 @@ const currentData = viewMode !== 'goals'
               </div>
             </div>
           </section>
-
+          */}
           {/* 최종 목표 달성 현황 */}
           <section className="card goal-summary-card">
             <div className="card-header">
@@ -595,7 +598,7 @@ const currentData = viewMode !== 'goals'
             </div>
             <div className="duration-content">
               <div className="duration-item input-row">
-                <span className="d-title">월간 목표 페이스</span>
+                <span className="d-title">월간 목표</span>
                 <input 
                   type="text"
                   inputMode='numeric'
@@ -640,7 +643,7 @@ const currentData = viewMode !== 'goals'
               <div className="congrats-text">
                 <Award size={24} className="icon-star" />
                 <div>
-                  <h3>목표 초과 달성!</h3>
+                  <h3>초과 달성!</h3>
                   <p>{viewMode === 'daily' ? '이번' : viewMode === 'weekly' ? '이번 주' : viewMode === 'monthly' ? '이번 달' : '올해'}엔 목표보다 <span className="highlight">{latestItem.surplus.toLocaleString()}원</span> 더 모았어요!</p>
                 </div>
               </div>
@@ -681,9 +684,9 @@ const currentData = viewMode !== 'goals'
                       <Tooltip 
                         formatter={(value, name) => {
                           let label = '';
-                          if (name === 'base') label = '목표 달성액';
-                          else if(name === 'surplus') label = '초과저축액';
-                          else if(name === 'diff') label = '부족 저축액';
+                          if (name === 'base') label = '목표';
+                          else if(name === 'surplus') label = '초과';
+                          else if(name === 'diff') label = '부족';
 
                           return [`${value.toLocaleString()}원`, label];
                         }}
@@ -715,7 +718,7 @@ const currentData = viewMode !== 'goals'
           <section className="card calendar-card">
             <div className="card-header">
               <CalendarIcon size={18} className="icon-toss" />
-              <span>목표 대비 달성 현황</span>
+              <span>달성 현황</span>
             </div>
             <div className="diff-list">
               {currentData.map((item) => {
@@ -752,7 +755,7 @@ const currentData = viewMode !== 'goals'
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>저축액 기록하기 ({viewMode})</h3>
+            <h3>저축 금액 기록하기 ({viewMode})</h3>
             <form onSubmit={handleAddSavings}>
 
               <div className="input-group">
@@ -773,7 +776,7 @@ const currentData = viewMode !== 'goals'
                 />
               </div>
               <div className="input-group">
-                <label>실제 저축액</label>
+                <label>저축 금액</label>
                 <input 
                   type="text" 
                   inputMode='numeric'
