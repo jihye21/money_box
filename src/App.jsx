@@ -315,7 +315,20 @@ const hasPreviousData = () => {
   return false;
 };
 
-const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
+ const currentTarget = 
+    viewMode === 'daily' ? goals.daily 
+  : viewMode === 'weekly' ? goals.weekly
+  : viewMode === 'monthly' ? goals.monthly 
+  : goals.yearly;
+const currentData = viewMode !== 'goals' 
+  ? getCurrentFilteredData().map(item => ({
+    ...item,
+    target: currentTarget,
+    diff: item.actual < currentTarget ? currentTarget - item.actual : 0,
+    base: Math.min(item.actual, currentTarget),
+    surplus: Math.max(0, item.actual - currentTarget),
+    deficit: item.actual < currentTarget ? currentTarget - item.actual: 0,
+  })) : [];
 
   // 데이터 추가 핸들러
   const handleAddSavings = (e) => {
@@ -417,7 +430,7 @@ const currentData = viewMode !== 'goals' ? getCurrentFilteredData() : [];
   // 가장 최근 데이터 기준 초과 여부 확인 (축하 카드용)
   const latestItem = currentData.length > 0 ? currentData[currentData.length - 1] : null;
   const isSurplus = latestItem && latestItem.actual > latestItem.target;
-  const currentTarget = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' ? goals.weekly : goals.monthly;
+  
 
   // 최종 목표까지 소요 기간 계산 (월간 저축액 기준)
   const remainingAmount = Math.max(0, goals.finalGoal - goals.currentTotal);
