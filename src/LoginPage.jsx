@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
+import './Login.css';
+
 export default function LoginPage() {
   const navigate = useNavigate();
 
@@ -22,15 +24,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-      <span className="subtitle">money_box</span>
-      <p>시작하려면 로그인이 필요합니다.</p>
-      <button 
-        onClick={handleGoogleLogin}
-        style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}
-      >
-        구글로 로그인하기
-      </button>
+    <div className="login-container">
+      <div className="login-card">
+        <span className="login-badge">money_box</span>
+        
+        <h2 className="login-title">
+          반가워요!<br />시작하려면 로그인이 필요해요
+        </h2>
+        
+        <p className="login-description">
+          간편하게 로그인하고 머니박스를 시작해보세요.
+        </p>
+
+        <button 
+          onClick={handleGoogleLogin}
+          className="login-button"
+        >
+          구글로 시작하기
+        </button>
+      </div>
     </div>
   );
 }
