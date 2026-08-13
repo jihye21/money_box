@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState} from 'react';
 import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Zap, Award, ChevronLeft
   , ChevronRight, LogOut} from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -6,14 +6,58 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
  } from 'recharts';
 
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy, setDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase.js';
 
 import './App.css';
 
 export default function App() {
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('viewMode') || 'daily';
+  }); // 'daily' | 'weekly' | 'monthly' | 'goals'
 
+  // 일간
+  const dailyData = [];
+
+  // 주간
+  const weeklyData = [];
+
+  // 월간
+  const monthlyData = [];
+
+  const [data, setData] = useState({
+    daily: [],
+    weekly: [],
+    monthly: [],
+  });
+
+  // 종합 목표 설정 상태
+  const [goals, setGoals] = useState({
+    daily: 0,  //일간 목표
+    weekly: 0,     // 주간 목표
+    monthly: 0,   // 월간 목표
+    yearly: 0,   // 연간 목표
+    currentYearly: 0,  //올해 누적 금액
+    finalGoal: 0, // 최종 목표
+    currentTotal: 0, // 현재까지 모은 총액 예시
+  });
+
+  // 모달 상태
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(()=>{
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [inputAmount, setInputAmount] = useState('');
+
+  //로그아웃 버튼 상태
+  const [showLogoutMenu, setShowLogoutMenu] = useState(false);
+
+  // 기간 조회 변수 | 이전: -1, 다음: 1
+  const [dateOffset, setDateOffset] = useState(0);
+
+  //로그인 상태
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -36,8 +80,6 @@ export default function App() {
     await signOut(auth);
     navigate('/login');
   };
-
-  if (loading) return <div>로딩 중...</div>;
 
   const saveRecord = async (amount, memo) => {
     const user = auth.currentUser;
@@ -77,6 +119,7 @@ export default function App() {
         daily: loadedRecords.filter((item) => item.type === 'daily'),
         weekly: loadedRecords.filter((item) => item.type === 'weekly'),
         monthly: loadedRecords.filter((item) => item.type === 'monthly'),
+        yearly: loadedRecords.filter((item) => item.type === 'yearly'),
       });
       
     } catch (error) {
@@ -94,93 +137,50 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const [viewMode, setViewMode] = useState(() => {
-    return localStorage.getItem('viewMode') || 'daily';
-  }); // 'daily' | 'weekly' | 'monthly' | 'goals'
-
   useEffect(()=>{
     if(viewMode !== 'goals'){
       localStorage.setItem('viewMode', viewMode);
     }
   }, [viewMode]);
   
-  // 일간
-  const dailyData = [];
+  const saveGoals = async (newGoals) => {
+    const user = auth.currentUser;
+    
+    try {
+      const docRef = doc(db, "goals", user.uid);
 
-  // 주간
-  const weeklyData = [];
+      await setDoc(docRef, newGoals);
 
-  // 월간
-  const monthlyData = [];
-
-  const [data, setData] = useState(() =>{
-    const savedData = localStorage.getItem('my_data');
-    return savedData ? JSON.parse(savedData) : {
-
-      daily: dailyData,
-
-      weekly: weeklyData,
-
-      monthly: monthlyData,
-
-    };
-  });
-
-  //로그
-  useEffect(() => {
-      localStorage.setItem('my_data', JSON.stringify(data));
-      //console.log("로그 수정 업데이트됨: ", JSON.stringify(data));
-  }, [data]);
+      setGoals(newGoals);
+    } catch (error) {
+      console.error("목표 저장 실패: ", error);
+    }
+  }
 
   const fetchGoals = async () => {
-  const user = auth.currentUser;
-  if (!user) return;
+    const user = auth.currentUser;
+    if (!user) return;
 
-  try {
-    const docRef = doc(db, "goals", user.uid);
-    const docSnap = await getDoc(docRef);
+    try {
+      const docRef = doc(db, "goals", user.uid);
+      const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      setGoals(docSnap.data()); 
+      if (docSnap.exists()) {
+        setGoals(docSnap.data()); 
+      }
+    } catch (error) {
+      console.error("목표 불러오기 실패:", error);
     }
-  } catch (error) {
-    console.error("목표 불러오기 실패:", error);
-  }
-};
-
-  // 종합 목표 설정 상태
-  const [goals, setGoals] = useState(() =>{
-    const savedGoals = localStorage.getItem('my_goals');
-    
-    return savedGoals ? JSON.parse(savedGoals) : {
-      daily: 0,  //일간 목표
-      weekly: 0,     // 주간 목표
-      monthly: 0,   // 월간 목표
-      yearly: 0,   // 연간 목표
-      currentYearly: 0,  //올해 누적 금액
-      finalGoal: 0, // 최종 목표
-      currentTotal: 0, // 현재까지 모은 총액 예시
-    };
-  });
+  };
 
   useEffect(() =>{
-    localStorage.setItem('my_goals', JSON.stringify(goals));
-  }, [goals]);
+    if(auth.currentUser) {
+      fetchGoals();
+    } 
+  }, [auth.currentUser]);
 
-  // 모달 상태
-  const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(()=>{
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
-  const [inputAmount, setInputAmount] = useState('');
-
-  //로그아웃 버튼 상태
-  const [showLogoutMenu, setShowLogoutMenu] = useState(false);
-
-  // 기간 조회 변수 | 이전: -1, 다음: 1
-  const [dateOffset, setDateOffset] = useState(0);
-
+  if (loading) return <div>로딩 중...</div>;
+  
   //기간 조회 함수
   const getCurrentFilteredData = () => {
   const rawList = data[viewMode] || [];
@@ -256,7 +256,7 @@ export default function App() {
 };
 
   //일,주,월,연간 저축액 데이터 수정 함수
-  const handleDataChange = (targetItem, value) => {
+  const handleDataChange = async (targetItem, value) => {
     //콤마 제거하고 숫자로 변환
     const cleanValue = value.replace(/,/g, '');
 
@@ -271,20 +271,25 @@ export default function App() {
     //diff 계산
     const diffAmount = actual - oldActual;
 
-    //0이면 데이터 삭제
-    if(actual === 0) {
-      setData(prevData => ({
-        ...prevData,
-        [viewMode]: prevData[viewMode].filter(item => item.rawDate !== targetItem.rawDate)
-      }));
+    try {
+      if(actual === 0) {
+        if(existingItem && existingItem.id) {
+          await deleteDoc(doc(db,"records", existingItem.id));
+        }
 
-      //"현재 모음 총액" - 삭제된 금액
-      setGoals(prev => ({
-        ...prev, 
-        currentTotal: Math.max(0, prev.currentTotal - oldActual)
-      }));
-      return;
-    }
+        setData(prevData => ({
+          ...prevData,
+          [viewMode]: prevData[viewMode].filter(item => item.rawDate !== targetItem.rawDate)
+        }));
+
+        const newGoals = {
+          ...goals, 
+          currentTotal: Math.max(0, goals.currentTotal - oldActual)
+        };
+        await saveGoals(newGoals);
+        return;
+      }
+    
     const target = (
         viewMode === 'daily' ? goals.daily 
       : viewMode === 'weekly' ? goals.weekly 
@@ -296,10 +301,38 @@ export default function App() {
     const surplus = Math.max(0, actual - target);
     const deficit = actual < target ? target - actual : 0;
 
+    let savedDocId = existingItem ? existingItem.id : null;
+
+    if(existingItem && existingItem.id) {
+      const docRef = doc(db, "records", existingItem.id);
+      await updateDoc(docRef, {
+        actual,
+        target, 
+        diff, 
+        base, 
+        surplus,
+        deficit,
+      });
+    } else {
+      const docRef = await addDoc(collection(db, "records"), {
+        userId: user.uid,
+        rawDate: targetItem.rawDate,
+        actual, 
+        target, 
+        diff, 
+        base,
+        surplus,
+        deficit,
+        createdAt: new Date(),
+      });
+      savedDocId = docRef.id;
+    }
+
     const updatedList = currentList.map(item => {
       if (item.rawDate === targetItem.rawDate) {
         return {
           ...item, 
+          id: savedDocId,
           actual,
           target,
           diff, 
@@ -316,16 +349,23 @@ export default function App() {
       [viewMode]: updatedList
     }));
 
-    setGoals(prev => ({
-      ...prev,
-      currentTotal: Math.max(0, prev.currentTotal + diffAmount)
-    }));
-  };
+    const newGoals = {
+      ...goals,
+      currentTotal: Math.max(0, goals.currentTotal + diffAmount)
+    };
+
+    await saveGoals(newGoals);
+  } catch (error) {
+    console.error("데이터 변경 및 저장 실패: ", error);
+  }
+};
 
   //종합 목표 데이터 수정 함수
-  const handleGoalChange = (field, value) => {
+  const handleGoalChange = async (field, value) => {
     const rawValue = value.replace(/,/g, '');
     const numericValue = rawValue === '' ? 0 : Number(rawValue);
+
+    let updatedGoals = { ...goals };
 
     if(field === 'daily' || field === 'weekly' || field === 'monthly' || field === 'yearly'){
       let daily = 0;
@@ -366,19 +406,23 @@ export default function App() {
           break;
       }
 
-      setGoals(prev => ({
-        ...prev, 
+      updatedGoals = {
+        ...updatedGoals,
         daily,
         weekly,
         monthly,
         yearly,
-      }));
+      };
     } else {
-      setGoals(prev => ({
-        ...prev, 
+      updatedGoals = {
+        ...updatedGoals,
         [field]: numericValue
-      }));
+      };
     }
+
+     setGoals(updatedGoals);
+
+     await saveGoals(updatedGoals);
   };
 
 //이전 기간 데이터 확인 함수
@@ -460,101 +504,128 @@ const currentData = viewMode !== 'goals'
   })) : [];
 
   // 데이터 추가 핸들러
-  const handleAddSavings = (e) => {
-  e.preventDefault();
-  if (!inputAmount || !selectedDate) return;
+  const handleAddSavings = async (e) => {
+    e.preventDefault();
+    if (!inputAmount || !selectedDate) return;
 
-  const actualToAdd = Number(inputAmount);
-  // 현재 뷰에 맞는 목표액 가져오기
-  const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' 
-    ? goals.weekly : viewMode === 'monthly' ? goals.monthly : goals.yearly;
+    const actualToAdd = Number(inputAmount);
+    // 현재 뷰에 맞는 목표액 가져오기
+    const target = viewMode === 'daily' ? goals.daily : viewMode === 'weekly' 
+      ? goals.weekly : viewMode === 'monthly' ? goals.monthly : goals.yearly;
 
-  // 날짜 생성 로직
-  let dateLabel = '';
-  if (viewMode === 'daily' && selectedDate) {
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    const [year, month, day] = selectedDate.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day);
-    const dayName = days[dateObj.getDay()];
+    // 날짜 생성 로직
+    let dateLabel = '';
+    if (viewMode === 'daily' && selectedDate) {
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      const dayName = days[dateObj.getDay()];
 
-    dateLabel = `${month}/${day} (${dayName})`;
-  } else if (viewMode === 'weekly' && selectedDate) {
-    const [year, weekStr] = selectedDate.split('-W');
-    const weekNum = Number(weekStr);
+      dateLabel = `${month}/${day} (${dayName})`;
+    } else if (viewMode === 'weekly' && selectedDate) {
+      const [year, weekStr] = selectedDate.split('-W');
+      const weekNum = Number(weekStr);
 
-    const month = new Date(year, 0, (weekNum - 1) * 7 + 1).getMonth() + 1;
-    const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
-    const calculatedWeek = Math.ceil((new Date(year, month - 1, 1).getDate() + firstDayOfMonth) / 7);
+      const month = new Date(year, 0, (weekNum - 1) * 7 + 1).getMonth() + 1;
+      const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
+      const calculatedWeek = Math.ceil((new Date(year, month - 1, 1).getDate() + firstDayOfMonth) / 7);
 
-    dateLabel = `${month}월 ${calculatedWeek || 1}주차`;
-  } else if (viewMode === 'monthly' && selectedDate) {
-    const [year, month] = selectedDate.split('-');
-    dateLabel = `${Number(month)}월`;
-  } else if (viewMode === 'yearly' && selectedDate) {
-    const year = selectedDate.split('-')[0];
-    dateLabel = `${year}년`;
-  }
+      dateLabel = `${month}월 ${calculatedWeek || 1}주차`;
+    } else if (viewMode === 'monthly' && selectedDate) {
+      const [year, month] = selectedDate.split('-');
+      dateLabel = `${Number(month)}월`;
+    } else if (viewMode === 'yearly' && selectedDate) {
+      const year = selectedDate.split('-')[0];
+      dateLabel = `${year}년`;
+    }
 
-  const currentList = data[viewMode] || [];
-  const existingIndex = currentList.findIndex(item => item.rawDate === selectedDate);
+    const currentList = data[viewMode] || [];
+    const existingIndex = currentList.findIndex(item => item.rawDate === selectedDate);
 
-  let updatedList;
-
-  if (existingIndex !== -1) {
-    const existingItem = currentList[existingIndex];
-    const newActual = existingItem.actual + actualToAdd;
+    let updatedList;
     
-    const diff = newActual < target ? target - newActual : 0;
-    const base = Math.min(newActual, target);
-    const surplus = Math.max(0, newActual - target);
-    const deficit = newActual < target ? target - newActual : 0;
+    try {
+      if (existingIndex !== -1) {
+      const existingItem = currentList[existingIndex];
+      const newActual = existingItem.actual + actualToAdd;
+      
+      const diff = newActual < target ? target - newActual : 0;
+      const base = Math.min(newActual, target);
+      const surplus = Math.max(0, newActual - target);
+      const deficit = newActual < target ? target - newActual : 0;
 
-    updatedList = [...currentList];
-    updatedList[existingIndex] = {
-      ...existingItem,
-      actual: newActual,
-      diff,
-      base,
-      surplus,
-      deficit
-    };
-  } else {
-    const diff = actualToAdd < target ? target - actualToAdd : 0;
-    const base = Math.min(actualToAdd, target);
-    const surplus = Math.max(0, actualToAdd - target);
-    const deficit = actualToAdd < target ? target - actualToAdd : 0;
+      if(existingItem.id) {
+        const docRef = doc(db, "records", existingIndex.id);
+        await updateDoc(docRef, {
+          actual: newActual,
+          target,
+          diff,
+          base, 
+          surplus,
+          deficit
+        });
+      }
+      
+      updatedList = [...currentList];
+      updatedList[existingIndex] = {
+        ...existingItem,
+        actual: newActual,
+        target,
+        diff,
+        base,
+        surplus,
+        deficit
+      };
+    } else {
+      const diff = actualToAdd < target ? target - actualToAdd : 0;
+      const base = Math.min(actualToAdd, target);
+      const surplus = Math.max(0, actualToAdd - target);
+      const deficit = actualToAdd < target ? target - actualToAdd : 0;
 
-    const newItem = {
-      rawDate: selectedDate, 
-      date: viewMode === 'daily' ? dateLabel : undefined,
-      period: viewMode !== 'daily' ? dateLabel : undefined,
-      actual: actualToAdd,
-      target,
-      diff,
-      base,
-      surplus,
-      deficit
-    };
+      const newItemData = {
+        rawDate: selectedDate, 
+        date: viewMode === 'daily' ? dateLabel : undefined,
+        period: viewMode !== 'daily' ? dateLabel : undefined,
+        actual: actualToAdd,
+        target,
+        diff,
+        base,
+        surplus,
+        deficit,
+        createdAt: new Date()
+      };
 
-    updatedList = [...currentList, newItem];
-  }
+      const docRef = await addDoc(collection(db, "records"), newItemData);
 
-  // 데이터 상태 업데이트
-  setData({
-    ...data,
-    [viewMode]: updatedList
-  });
+      const newItem = {
+        id: docRef.id,
+        ...newItemData
+      };
 
-  setGoals(prev => ({ 
-    ...prev, 
-    currentTotal: prev.currentTotal + actualToAdd,
-    currentYearly: prev.currentYearly + (viewMode === 'monthly' ? actualToAdd : 0) 
-  }));
+      updatedList = [...currentList, newItem];
+    }
 
-  setInputAmount('');
-  setSelectedDate('');
-  setShowModal(false);
-};
+    // 데이터 상태 업데이트
+    setData({
+      ...data,
+      [viewMode]: updatedList
+    });
+
+    const newGoals = {
+      ...goals,
+      currentTotal: goals.currentTotal + actualToAdd,
+      currentYearly: goals.currentYearly + (viewMode === 'monthly' ? actualToAdd : 0)
+    }
+
+    await saveGoals(newGoals);
+
+    setInputAmount('');
+    setSelectedDate('');
+    setShowModal(false);
+    } catch (error) {
+      console.error("저축 내역 저장 실패: ", error);
+    }
+  };
 
   // 가장 최근 데이터 기준 초과 여부 확인 (축하 카드용)
   const latestItem = currentData.length > 0 ? currentData[currentData.length - 1] : null;
