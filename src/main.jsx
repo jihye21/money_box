@@ -8,7 +8,7 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/money_box">
       <Routes>
         {/* 로그인 페이지 경로 */}
         <Route path="/login" element={<LoginPage />} />
