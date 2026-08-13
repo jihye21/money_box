@@ -423,7 +423,7 @@ body {
 .diff-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 10px 0;
   border-bottom: 1px solid #f2f4f6;
 }
@@ -436,12 +436,14 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: #4e5968;
+  padding-top: 6px;
 }
 
 .item-values {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .actual-val {
@@ -454,6 +456,12 @@ body {
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 8px;
+  width: 140px;
+  overflow: hidden;
+}
+
+.actual-val, .diff-badge {
+  white-space: nowrap;
 }
 
 .diff-badge.plus {

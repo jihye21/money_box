@@ -702,6 +702,7 @@ const currentData = viewMode !== 'goals'
                         tickLine={false} 
                         axisLine={false}
                         tickFormatter={(value) => {
+                          if (value >= 100000000000) return `${(value / 100000000).toFixed(1)}조`;
                           if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
                           if (value >= 10000) return `${(value / 10000).toLocaleString()}만`;
                           if (value >= 1000) return `${(value / 1000).toLocaleString()}천`;
@@ -759,14 +760,14 @@ const currentData = viewMode !== 'goals'
                   <div key={item.rawDate} className="diff-item">
                     <span className="item-label">{item.date || item.period}</span>
                     <div className="item-values">
-                      <span className='actual-val'>
+                      <div className='actual-val'>
                       <input 
                         type="text"
                         inputMode="numeric"
                         className="goal-input-field"
                         value={item.actual ? item.actual.toLocaleString() : ''}
                         onChange={(e)=>handleDataChange(item, e.target.value)}
-                      />원</span>
+                      />원</div>
                       {isSurplus ? (
                         <span className="diff-badge surplus">+{item.surplus.toLocaleString()}원 초과!</span>
                       ) : item.diff > 0 ? (
