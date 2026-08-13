@@ -666,7 +666,7 @@ const currentData = viewMode !== 'goals'
       ) : (
         <>
           {/* 초과 달성 축하 배너 */}
-          {isSurplus && (
+          {isSurplus && dateOffset === 0 && (
             <div className="surplus-celebration-card card">
               <div className="congrats-text">
                 <Award size={24} className="icon-star" />
