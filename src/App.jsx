@@ -3,9 +3,39 @@ import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Zap, Award, C
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
   , ReferenceLine
  } from 'recharts';
+
+import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase.js';
+
 import './App.css';
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // 로그인 상태 감지
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        navigate('/login');
+      } else {
+        setUser(currentUser);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate('/login');
+  };
+
+  if (loading) return <div>로딩 중...</div>;
+
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('viewMode') || 'daily';
   }); // 'daily' | 'weekly' | 'monthly' | 'goals'

@@ -1,10 +1,21 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+// src/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import App from './App.jsx';
+import LoginPage from './LoginPage.jsx';
+import './index.css';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <Routes>
+        {/* 로그인 페이지 경로 */}
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* 기존 메인 저축 페이지 경로 */}
+        <Route path="/" element={<App />} />
+      </Routes>
+    </BrowserRouter>
+  </React.StrictMode>,
+);
