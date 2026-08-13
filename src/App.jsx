@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Zap, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, TrendingUp, Calendar as CalendarIcon, Target, Flag, Zap, Award, ChevronLeft
+  , ChevronRight, LogOut} from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
   , ReferenceLine
  } from 'recharts';
@@ -11,6 +12,7 @@ import { auth } from '../lib/firebase.js';
 import './App.css';
 
 export default function App() {
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -35,6 +37,10 @@ export default function App() {
   };
 
   if (loading) return <div>로딩 중...</div>;
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
 
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('viewMode') || 'daily';
@@ -67,10 +73,10 @@ export default function App() {
 
     };
   });
-//로그
+  //로그
   useEffect(() => {
       localStorage.setItem('my_data', JSON.stringify(data));
-      console.log("로그 수정 업데이트됨: ", JSON.stringify(data));
+      //console.log("로그 수정 업데이트됨: ", JSON.stringify(data));
   }, [data]);
 
   // 종합 목표 설정 상태
@@ -99,6 +105,9 @@ export default function App() {
     return today.toISOString().split('T')[0];
   });
   const [inputAmount, setInputAmount] = useState('');
+
+  //로그아웃 버튼 상태
+  const [showLogoutMenu, setShowLogoutMenu] = useState(false);
 
   // 기간 조회 변수 | 이전: -1, 다음: 1
   const [dateOffset, setDateOffset] = useState(0);
@@ -501,8 +510,48 @@ const currentData = viewMode !== 'goals'
     <div className="toss-container">
       {/* 상단 헤더 */}
       <header className="header">
-        <div className="title-area">
-          <span className="subtitle">money_box</span>
+        <div className="title-area" style={{ position: 'relative', display: 'inline-block' }}>
+          <span 
+            className="subtitle"
+            onClick={() => setShowLogoutMenu((prev) => !prev)}
+            style={{ cursor: 'pointer', display: 'inline-block'}}
+          >
+            money_box ▾
+          </span>
+
+          {showLogoutMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: '0',
+              marginTop: '6px',
+              background: 'white',
+              border: '1px solid #eaeaea',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              zIndex: 9999,
+              overflow: 'hidden'
+            }}>
+              <button 
+                onClick={handleLogout}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'none',
+                  border: 'none',
+                  padding: '8px 14px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  color: '#e03131',
+                  whiteSpace: 'nowrap',
+                  width: '100%'
+                }}
+              >
+                <LogOut size={14} /> 로그아웃
+              </button>
+            </div>
+          )}
         </div>
         {viewMode !== 'goals' && (
           <button className="add-btn" onClick={() => setShowModal(true)}>
