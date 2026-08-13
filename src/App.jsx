@@ -6,8 +6,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
  } from 'recharts';
 
 import { useNavigate } from 'react-router-dom';
+import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase.js';
+import { db, auth } from '../lib/firebase.js';
 
 import './App.css';
 
@@ -38,9 +39,60 @@ export default function App() {
 
   if (loading) return <div>로딩 중...</div>;
 
-  const handleLogout = () => {
-    navigate('/login');
+  const saveRecord = async (amount, memo) => {
+    const user = auth.currentUser;
+
+    try {
+      await addDoc(collection(db, "records"), {
+        userId: user.uid,        // 구글 로그인한 유저의 고유 ID
+        amount: amount,          // 금액
+        memo: memo,              // 메모
+        createdAt: new Date(),   // 저장한 시간
+      });
+      
+      fetchRecords(); 
+      
+    } catch (error) {
+      console.error("데이터 저장 실패:", error);
+    }
   };
+
+  const fetchRecords = async () => {
+    const user = auth.currentUser;
+
+    try {
+      const q = query(
+        collection(db, "records"), 
+        where("userId", "==", user.uid)
+      );
+
+      const querySnapshot = await getDocs(q);
+      
+      const loadedRecords = querySnapshot.docs.map((doc) => ({
+        id: doc.id, // 문서의 고유 ID
+        ...doc.data()
+      }));
+
+      setData({
+        daily: loadedRecords.filter((item) => item.type === 'daily'),
+        weekly: loadedRecords.filter((item) => item.type === 'weekly'),
+        monthly: loadedRecords.filter((item) => item.type === 'monthly'),
+      });
+      
+    } catch (error) {
+      console.error("데이터 불러오기 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchRecords();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('viewMode') || 'daily';
@@ -73,11 +125,28 @@ export default function App() {
 
     };
   });
+
   //로그
   useEffect(() => {
       localStorage.setItem('my_data', JSON.stringify(data));
       //console.log("로그 수정 업데이트됨: ", JSON.stringify(data));
   }, [data]);
+
+  const fetchGoals = async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const docRef = doc(db, "goals", user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      setGoals(docSnap.data()); 
+    }
+  } catch (error) {
+    console.error("목표 불러오기 실패:", error);
+  }
+};
 
   // 종합 목표 설정 상태
   const [goals, setGoals] = useState(() =>{
