@@ -6,8 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
  } from 'recharts';
 
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, getDocs, query, where, orderBy, setDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { collection, addDoc, getDoc, getDocs, query, where, orderBy, setDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut} from 'firebase/auth';
 import { db, auth } from '../lib/firebase.js';
 
 import './App.css';
@@ -546,85 +546,91 @@ const currentData = viewMode !== 'goals'
     
     try {
       if (existingIndex !== -1) {
-      const existingItem = currentList[existingIndex];
-      const newActual = existingItem.actual + actualToAdd;
-      
-      const diff = newActual < target ? target - newActual : 0;
-      const base = Math.min(newActual, target);
-      const surplus = Math.max(0, newActual - target);
-      const deficit = newActual < target ? target - newActual : 0;
+        const existingItem = currentList[existingIndex];
+        const newActual = existingItem.actual + actualToAdd;
+        
+        const diff = newActual < target ? target - newActual : 0;
+        const base = Math.min(newActual, target);
+        const surplus = Math.max(0, newActual - target);
+        const deficit = newActual < target ? target - newActual : 0;
 
-      if(existingItem.id) {
-        const docRef = doc(db, "records", existingIndex.id);
-        await updateDoc(docRef, {
+        if(existingItem.id) {
+          const docRef = doc(db, "records", existingItem.id);
+          await updateDoc(docRef, {
+            actual: newActual,
+            target,
+            diff,
+            base, 
+            surplus,
+            deficit
+          });
+        }
+        
+        updatedList = [...currentList];
+        updatedList[existingIndex] = {
+          ...existingItem,
           actual: newActual,
           target,
           diff,
-          base, 
+          base,
           surplus,
           deficit
-        });
+        };
+      } else {
+        const diff = actualToAdd < target ? target - actualToAdd : 0;
+        const base = Math.min(actualToAdd, target);
+        const surplus = Math.max(0, actualToAdd - target);
+        const deficit = actualToAdd < target ? target - actualToAdd : 0;
+
+        const newItemData = {
+          userId: auth.currentUser.uid,
+          rawDate: selectedDate, 
+          date: viewMode === 'daily' ? dateLabel : null,
+          period: viewMode !== 'daily' ? dateLabel : null,
+          actual: actualToAdd,
+          target,
+          diff,
+          base,
+          surplus,
+          deficit,
+          createdAt: Date.now()
+        };
+
+        const user = auth.currentUser;
+        if(user) {
+          await user.getIdToken(true);
+        }
+        
+        const docRef = await addDoc(collection(db, "records"), newItemData);
+
+        const newItem = {
+          id: docRef.id,
+          ...newItemData
+        };
+
+        updatedList = [...currentList, newItem];
       }
-      
-      updatedList = [...currentList];
-      updatedList[existingIndex] = {
-        ...existingItem,
-        actual: newActual,
-        target,
-        diff,
-        base,
-        surplus,
-        deficit
-      };
-    } else {
-      const diff = actualToAdd < target ? target - actualToAdd : 0;
-      const base = Math.min(actualToAdd, target);
-      const surplus = Math.max(0, actualToAdd - target);
-      const deficit = actualToAdd < target ? target - actualToAdd : 0;
 
-      const newItemData = {
-        rawDate: selectedDate, 
-        date: viewMode === 'daily' ? dateLabel : undefined,
-        period: viewMode !== 'daily' ? dateLabel : undefined,
-        actual: actualToAdd,
-        target,
-        diff,
-        base,
-        surplus,
-        deficit,
-        createdAt: new Date()
-      };
+      // 데이터 상태 업데이트
+      setData({
+        ...data,
+        [viewMode]: updatedList
+      });
 
-      const docRef = await addDoc(collection(db, "records"), newItemData);
+      const newGoals = {
+        ...goals,
+        currentTotal: goals.currentTotal + actualToAdd,
+        currentYearly: goals.currentYearly + (viewMode === 'monthly' ? actualToAdd : 0)
+      }
 
-      const newItem = {
-        id: docRef.id,
-        ...newItemData
-      };
+      await saveGoals(newGoals);
 
-      updatedList = [...currentList, newItem];
-    }
-
-    // 데이터 상태 업데이트
-    setData({
-      ...data,
-      [viewMode]: updatedList
-    });
-
-    const newGoals = {
-      ...goals,
-      currentTotal: goals.currentTotal + actualToAdd,
-      currentYearly: goals.currentYearly + (viewMode === 'monthly' ? actualToAdd : 0)
-    }
-
-    await saveGoals(newGoals);
-
-    setInputAmount('');
-    setSelectedDate('');
-    setShowModal(false);
-    } catch (error) {
-      console.error("저축 내역 저장 실패: ", error);
-    }
+      setInputAmount('');
+      setSelectedDate('');
+      setShowModal(false);
+      } catch (error) {
+        console.error("저축 내역 저장 실패: ", error);
+      }
   };
 
   // 가장 최근 데이터 기준 초과 여부 확인 (축하 카드용)

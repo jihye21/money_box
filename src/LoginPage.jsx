@@ -13,10 +13,7 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      console.log("로그인 성공:", result.user);
-      
-      // 로그인 성공 시 메인 화면('/')으로 이동
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       console.error("로그인 실패:", error);
       alert("로그인에 실패했습니다.");
