@@ -6,13 +6,16 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer
  } from 'recharts';
 
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, getDoc, getDocs, query, where, orderBy, setDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDoc, getDocs, query, where, orderBy
+  , setDoc, deleteDoc, updateDoc, doc
+  , onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, signOut} from 'firebase/auth';
 import { db, auth } from '../lib/firebase.js';
 
 import './App.css';
 
 export default function App() {
+  const [records, setRecords] = useState([]);
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('viewMode') || 'daily';
   }); // 'daily' | 'weekly' | 'monthly' | 'goals'
@@ -81,57 +84,19 @@ export default function App() {
     navigate('/login');
   };
 
-  const saveRecord = async (amount, memo) => {
+  useEffect(()=> {
     const user = auth.currentUser;
+    if(!user) return;
 
-    try {
-      await addDoc(collection(db, "records"), {
-        userId: user.uid,        // 구글 로그인한 유저의 고유 ID
-        amount: amount,          // 금액
-        memo: memo,              // 메모
-        createdAt: new Date(),   // 저장한 시간
-      });
-      
-      fetchRecords(); 
-      
-    } catch (error) {
-      console.error("데이터 저장 실패:", error);
-    }
-  };
+    const q = query(collection(db, "records"), where("userId", "==", user.uid));
 
-  const fetchRecords = async () => {
-    const user = auth.currentUser;
-
-    try {
-      const q = query(
-        collection(db, "records"), 
-        where("userId", "==", user.uid)
-      );
-
-      const querySnapshot = await getDocs(q);
-      
-      const loadedRecords = querySnapshot.docs.map((doc) => ({
-        id: doc.id, // 문서의 고유 ID
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const recordList = snapshot.docs.map(doc => ({
+        id: doc.id,
         ...doc.data()
       }));
 
-      setData({
-        daily: loadedRecords.filter((item) => item.type === 'daily'),
-        weekly: loadedRecords.filter((item) => item.type === 'weekly'),
-        monthly: loadedRecords.filter((item) => item.type === 'monthly'),
-        yearly: loadedRecords.filter((item) => item.type === 'yearly'),
-      });
-      
-    } catch (error) {
-      console.error("데이터 불러오기 실패:", error);
-    }
-  };
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        fetchRecords();
-      }
+      setRecords(recordList);
     });
 
     return () => unsubscribe();
